@@ -1,0 +1,6 @@
+[package]
+name = "asciimath"
+version = "0.1.0"
+authors = ["Gregory <gregory.mkv@gmail.com>"]
+
+[dependencies]
