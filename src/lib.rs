@@ -1,4 +1,4 @@
-use std::{fmt};
+use std::fmt;
 
 pub enum Operator {
     Add,
@@ -9,12 +9,12 @@ pub enum Operator {
 
 impl fmt::Debug for Operator {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Operator::Add => write!(f, "+"),
-            Operator::Substract => write!(f, "-"),
-            Operator::Multiply => write!(f, "*"),
-            Operator::Divide => write!(f, "/")
-        }
+        write!(f, "{}", match self {
+            Operator::Add => "+",
+            Operator::Substract => "-",
+            Operator::Multiply => "*",
+            Operator::Divide => "/"
+        })
     }
 }
 
@@ -32,28 +32,28 @@ pub enum Value {
     Nothing
 }
 
+type EvaluationResult = f64;
+
 pub trait Evaluate {
-    fn eval(self) -> f64;
+    fn eval(self) -> EvaluationResult;
 }
 
-pub fn eval_node(operator: Operator, lhs: Value, rhs: Value) -> f64 {
-    let lhs_v = lhs.eval();
-    let rhs_v = rhs.eval();
+pub fn eval_node(operator: Operator, lhs_val: Value, rhs_val: Value) -> EvaluationResult {
+    let lhs = lhs_val.eval();
+    let rhs = rhs_val.eval();
 
     match operator {
-        Operator::Add => lhs_v + rhs_v,
-        Operator::Substract => lhs_v - rhs_v,
-        Operator::Multiply => lhs_v * rhs_v,
-        Operator::Divide => lhs_v / rhs_v
+        Operator::Add => lhs + rhs,
+        Operator::Substract => lhs - rhs,
+        Operator::Multiply => lhs * rhs,
+        Operator::Divide => lhs / rhs
     }
 }
 
 impl Evaluate for Value {
-    fn eval(self) -> f64 {
+    fn eval(self) -> EvaluationResult {
         match self {
-            Value::Node { operator, lhs, rhs } => {
-                  return eval_node(operator, *lhs, *rhs);
-            },
+            Value::Node { operator, lhs, rhs } => eval_node(operator, *lhs, *rhs),
             Value::Literal { value } => value,
             Value::Nothing => 0.0,
         }
