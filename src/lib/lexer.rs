@@ -1,4 +1,4 @@
-use std::{fmt};
+use std::fmt;
 
 pub enum Operator {
     Add,

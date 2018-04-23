@@ -1,6 +1,6 @@
 mod lib;
 
-use lib::{rest,lexer};
+use lib::{lexer, rest};
 
 fn main() {
     // let expr = parse_expr("1*2*3 + 24*5 - 10");

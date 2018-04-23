@@ -1,7 +1,5 @@
-use lib::lexer::{Operator};
-use std::{fmt};
-
-
+use lib::lexer::Operator;
+use std::fmt;
 
 pub enum Value {
     Node {
@@ -105,5 +103,3 @@ pub fn multiply_or_divide(operator: Operator, expr: &str, i: usize) -> Box<Value
     println!("lsh:({:?}) * rhs:({:?})", lhs, rhs);
     Box::new(Value::Node { operator, lhs, rhs })
 }
-
-
