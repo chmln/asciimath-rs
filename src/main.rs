@@ -1,9 +1,10 @@
 mod lib;
 
-use lib::{parse_expr, Evaluate};
+use lib::{rest,lexer};
 
 fn main() {
-    let expr = parse_expr("1*2*3 + 4 + 15*9 - 100");
-    println!("{:?}", expr);
-    println!("{}", &expr.eval());
+    // let expr = parse_expr("1*2*3 + 24*5 - 10");
+    // println!("{:?}", expr);
+    // println!("{}", &expr.eval());
+    println!("{:?}", lexer::tokenize("1*2*3 + 24*5 - 10"))
 }

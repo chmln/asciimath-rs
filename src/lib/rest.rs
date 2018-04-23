@@ -1,35 +1,20 @@
-use std::fmt;
+use lib::lexer::{Operator};
+use std::{fmt};
 
-pub enum Operator {
-    Add,
-    Substract,
-    Multiply,
-    Divide
-}
 
-impl fmt::Debug for Operator {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", match self {
-            Operator::Add => "+",
-            Operator::Substract => "-",
-            Operator::Multiply => "*",
-            Operator::Divide => "/"
-        })
-    }
-}
 
 pub enum Value {
     Node {
         operator: Operator,
         lhs: Box<Value>,
-        rhs: Box<Value>
+        rhs: Box<Value>,
     },
 
     Literal {
-        value: f64
+        value: f64,
     },
 
-    Nothing
+    Nothing,
 }
 
 type EvaluationResult = f64;
@@ -46,7 +31,7 @@ pub fn eval_node(operator: Operator, lhs_val: Value, rhs_val: Value) -> Evaluati
         Operator::Add => lhs + rhs,
         Operator::Substract => lhs - rhs,
         Operator::Multiply => lhs * rhs,
-        Operator::Divide => lhs / rhs
+        Operator::Divide => lhs / rhs,
     }
 }
 
@@ -61,13 +46,11 @@ impl Evaluate for Value {
 }
 
 impl fmt::Debug for Value {
-    fn fmt (&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Value::Node { operator, lhs, rhs } => {
-                write!(f, "{:?} {:?} {:?}", lhs, operator, rhs)
-            },
+            Value::Node { operator, lhs, rhs } => write!(f, "{:?} {:?} {:?}", lhs, operator, rhs),
             Value::Literal { value } => write!(f, "{}", value),
-            Value::Nothing => write!(f, "")
+            Value::Nothing => write!(f, ""),
         }
     }
 }
@@ -79,8 +62,8 @@ pub fn parse_expr(expr: &str) -> Box<Value> {
     let check_num = expr.parse::<f64>();
     if check_num.is_ok() {
         return Box::new(Value::Literal {
-            value: check_num.unwrap()
-        })
+            value: check_num.unwrap(),
+        });
     }
 
     for c in s.chars() {
@@ -91,16 +74,16 @@ pub fn parse_expr(expr: &str) -> Box<Value> {
                 if !s.contains("+") && !s.contains("-") {
                     return multiply_or_divide(Operator::Multiply, &s, i);
                 }
-            },
-            '/'  => {
+            }
+            '/' => {
                 if !s.contains("+") && !s.contains("-") {
                     return multiply_or_divide(Operator::Divide, &s, i);
                 }
-            },
-            _ => ()
+            }
+            _ => (),
         }
 
-        i+=1;
+        i += 1;
     }
 
     return Box::new(Value::Nothing);
@@ -112,11 +95,7 @@ pub fn add_or_subtract(operator: Operator, expr: &str, i: usize) -> Box<Value> {
 
     println!("lsh:({:?}) + rhs:({:?})", lhs, rhs);
 
-    Box::new(Value::Node {
-        operator,
-        lhs,
-        rhs,
-    })
+    Box::new(Value::Node { operator, lhs, rhs })
 }
 
 pub fn multiply_or_divide(operator: Operator, expr: &str, i: usize) -> Box<Value> {
@@ -124,9 +103,7 @@ pub fn multiply_or_divide(operator: Operator, expr: &str, i: usize) -> Box<Value
     let rhs = parse_expr(&expr[(i + 1)..(expr.len())]);
 
     println!("lsh:({:?}) * rhs:({:?})", lhs, rhs);
-    Box::new(Value::Node {
-        operator,
-        lhs,
-        rhs
-    })
+    Box::new(Value::Node { operator, lhs, rhs })
 }
+
+
