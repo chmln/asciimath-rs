@@ -1,10 +1,11 @@
-use std::fmt;
+use std::{fmt};
 
 pub enum Operator {
     Add,
     Substract,
     Multiply,
     Divide,
+    Exponentiate,
 }
 
 impl fmt::Debug for Operator {
@@ -17,16 +18,25 @@ impl fmt::Debug for Operator {
                 Operator::Substract => "-",
                 Operator::Multiply => "*",
                 Operator::Divide => "/",
+                Operator::Exponentiate => "^",
             }
         )
     }
 }
 
-pub struct NumericLiteral {
-    value: f64,
+pub struct Number {
+    pub value: f64,
 }
 
-impl fmt::Debug for NumericLiteral {
+impl Number {
+    pub fn new (value: f64) -> Number {
+        Number {
+            value
+        }
+    }
+}
+
+impl fmt::Debug for Number {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.value)
     }
@@ -35,7 +45,9 @@ impl fmt::Debug for NumericLiteral {
 #[derive(Debug)]
 pub enum Token {
     Operator(Operator),
-    NumericLiteral(NumericLiteral),
+    Number(Number),
+    LeftParenthesis,
+    RightParenthesis,
 }
 
 pub fn tokenize(expr: &str) -> Vec<Token> {
@@ -54,7 +66,7 @@ pub fn tokenize(expr: &str) -> Vec<Token> {
 
             if temp.len() > 0 {
                 if let Ok(num) = temp.parse::<f64>() {
-                    tokens.push(Token::NumericLiteral(NumericLiteral { value: num }))
+                    tokens.push(Token::Number(Number { value: num }))
                 }
 
                 temp.clear()
@@ -67,15 +79,15 @@ pub fn tokenize(expr: &str) -> Vec<Token> {
                 '/' => tokens.push(Token::Operator(Operator::Divide)),
 
                 // todo parens
-                '(' => (),
-                ')' => (),
+                '(' => tokens.push(Token::LeftParenthesis),
+                ')' => tokens.push(Token::RightParenthesis),
                 _ => {}
             }
         } else {
             // todo: refactor
             if temp.len() > 0 {
                 if let Ok(num) = temp.parse::<f64>() {
-                    tokens.push(Token::NumericLiteral(NumericLiteral { value: num }))
+                    tokens.push(Token::Number(Number { value: num }))
                 }
             }
 
@@ -86,23 +98,4 @@ pub fn tokenize(expr: &str) -> Vec<Token> {
     tokens
 }
 
-pub fn postfix(expr: &str) -> String {
-    let mut s = String::new();
-    let tokens = tokenize(&expr);
 
-    //let output_queue: VecDeque
-    let mut operator_stack: Vec<&Operator> = Vec::new();
-
-    for token in &tokens {
-        match token {
-            Token::NumericLiteral(NumericLiteral { value }) => {
-                s.push_str(&*value.to_string());
-            }
-            Token::Operator(op) => {
-                operator_stack.push(op);
-            }
-        }
-    }
-
-    s
-}
