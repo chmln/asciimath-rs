@@ -1,12 +1,12 @@
 use std::collections::VecDeque;
 
-use lib::lexer::{Operator, tokenize, Token, Number};
+use lib::lexer::{tokenize, Number, Operator, Token};
 use std::fmt;
 
 pub enum Value {
     Number(Number),
     Operator(Operator),
-    Nothing
+    Nothing,
 }
 
 pub struct ASTNode {
@@ -37,8 +37,10 @@ pub fn eval_node(operator: Operator, lhs_val: ASTNode, rhs_val: ASTNode) -> Eval
 impl Evaluate for ASTNode {
     fn eval(self) -> EvaluationResult {
         match self.value {
-            Value::Operator(operator) => eval_node(operator, *self.lhs.unwrap(), *self.rhs.unwrap()),
-            Value::Number(Number{ value }) => value,
+            Value::Operator(operator) => {
+                eval_node(operator, *self.lhs.unwrap(), *self.rhs.unwrap())
+            }
+            Value::Number(Number { value }) => value,
             Value::Nothing => 0.0,
         }
     }
@@ -48,7 +50,7 @@ impl fmt::Debug for ASTNode {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.value {
             Value::Operator(ref op) => write!(f, "{:?} {:?} {:?}", self.lhs, op, self.rhs),
-            Value::Number(Number{ value }) => write!(f, "{}", value),
+            Value::Number(Number { value }) => write!(f, "{}", value),
             Value::Nothing => write!(f, ""),
         }
     }
@@ -63,17 +65,14 @@ pub fn parse(expr: &str) -> ASTNode {
 
     for token in &tokens {
         match token {
-            Token::Number(Number { value }) => {
-               operand_stack.push_back(ASTNode {
-                   value: Value::Number(Number::new(*value)),
-                   lhs: None,
-                   rhs: None
-
-                })
-            }
+            Token::Number(Number { value }) => operand_stack.push_back(ASTNode {
+                value: Value::Number(Number::new(*value)),
+                lhs: None,
+                rhs: None,
+            }),
             Token::Operator(op) => {
                 operator_stack.push_back(&op);
-            },
+            }
             _ => {}
         }
     }

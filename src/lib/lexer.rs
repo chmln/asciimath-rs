@@ -1,4 +1,4 @@
-use std::{fmt};
+use std::fmt;
 
 pub enum Operator {
     Add,
@@ -29,10 +29,8 @@ pub struct Number {
 }
 
 impl Number {
-    pub fn new (value: f64) -> Number {
-        Number {
-            value
-        }
+    pub fn new(value: f64) -> Number {
+        Number { value }
     }
 }
 
@@ -97,5 +95,3 @@ pub fn tokenize(expr: &str) -> Vec<Token> {
 
     tokens
 }
-
-
