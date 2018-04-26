@@ -28,12 +28,6 @@ pub struct Number {
     pub value: f64,
 }
 
-impl Number {
-    pub fn new(value: f64) -> Number {
-        Number { value }
-    }
-}
-
 impl fmt::Debug for Number {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.value)
@@ -75,8 +69,7 @@ pub fn tokenize(expr: &str) -> Vec<Token> {
                 '-' => tokens.push(Token::Operator(Operator::Substract)),
                 '*' => tokens.push(Token::Operator(Operator::Multiply)),
                 '/' => tokens.push(Token::Operator(Operator::Divide)),
-
-                // todo parens
+                '^' => tokens.push(Token::Operator(Operator::Exponentiate)),
                 '(' => tokens.push(Token::LeftParenthesis),
                 ')' => tokens.push(Token::RightParenthesis),
                 _ => {}
@@ -84,8 +77,8 @@ pub fn tokenize(expr: &str) -> Vec<Token> {
         } else {
             // todo: refactor
             if temp.len() > 0 {
-                if let Ok(num) = temp.parse::<f64>() {
-                    tokens.push(Token::Number(Number { value: num }))
+                if let Ok(value) = temp.parse::<f64>() {
+                    tokens.push(Token::Number(Number { value }))
                 }
             }
 
