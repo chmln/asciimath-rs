@@ -6,7 +6,6 @@ use std::fmt;
 pub enum Value {
     Number(Number),
     Operator(Operator),
-    Nothing,
 }
 
 pub struct ASTNode {
@@ -21,7 +20,11 @@ pub trait Evaluate {
     fn eval(self) -> EvaluationResult;
 }
 
-pub fn eval_node(operator: Operator, lhs_val: ASTNode, rhs_val: ASTNode) -> EvaluationResult {
+pub fn eval_node(
+    operator: Operator,
+    lhs_val: ASTNode,
+    rhs_val: ASTNode,
+) -> EvaluationResult {
     let lhs = lhs_val.eval();
     let rhs = rhs_val.eval();
 
@@ -41,7 +44,6 @@ impl Evaluate for ASTNode {
                 eval_node(operator, *self.lhs.unwrap(), *self.rhs.unwrap())
             }
             Value::Number(Number { value }) => value,
-            Value::Nothing => 0.0,
         }
     }
 }
@@ -49,9 +51,10 @@ impl Evaluate for ASTNode {
 impl fmt::Debug for ASTNode {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.value {
-            Value::Operator(ref op) => write!(f, "{:?} {:?} {:?}", self.lhs, op, self.rhs),
+            Value::Operator(ref op) => {
+                write!(f, "{:?} {:?} {:?}", self.lhs, op, self.rhs)
+            }
             Value::Number(Number { value }) => write!(f, "{}", value),
-            Value::Nothing => write!(f, ""),
         }
     }
 }
@@ -65,11 +68,13 @@ pub fn parse(expr: &str) -> ASTNode {
 
     for token in &tokens {
         match token {
-            Token::Number(Number { value }) => operand_stack.push_back(ASTNode {
-                value: Value::Number(Number::new(*value)),
-                lhs: None,
-                rhs: None,
-            }),
+            Token::Number(Number { value }) => {
+                operand_stack.push_back(ASTNode {
+                    value: Value::Number(Number { value: *value }),
+                    lhs: None,
+                    rhs: None,
+                })
+            }
             Token::Operator(op) => {
                 operator_stack.push_back(&op);
             }
