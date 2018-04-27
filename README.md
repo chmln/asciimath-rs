@@ -1,5 +1,4 @@
 # asciimath-rs
 
-Mathematical expression parser and evaluator. Unstable.
+Parses mathematical (infix) expressions into an Abstract Syntax Tree using  Dijkstra's "shunting yard" algorithm. 
 
-Subject to changes as the parser and the tokenizer account for ever-complex expressions.
