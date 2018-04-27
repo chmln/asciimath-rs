@@ -63,7 +63,8 @@ pub fn eval_node(
             // this should never happen
             _ => Err("cannot evaluate a parenthesis".to_string()),
         }
-    } else {
+    }
+    else {
         Err(format!(
             "failed to evaluate {:?} {:?} {:?}",
             lhs_result, operator, rhs_result
@@ -84,7 +85,8 @@ impl Evaluate for ASTNode {
             Value::Variable(var) => {
                 if let Some(value) = scope.get_var(&var.name) {
                     Ok(value.clone())
-                } else {
+                }
+                else {
                     Err(format!("Variable not found: {}", var.name))
                 }
             }
@@ -109,7 +111,7 @@ impl fmt::Debug for ASTNode {
     }
 }
 
-pub fn parse(expr: &str) -> ASTNode {
+pub fn parse(expr: &str) -> Option<ASTNode> {
     let tokens = tokenize(&expr);
 
     let mut operator_stack: Vec<Operator> = Vec::new();
@@ -159,7 +161,8 @@ pub fn parse(expr: &str) -> ASTNode {
                                 let lhs = operand_stack.pop().unwrap();
                                 //println!("{:?} {:?} {:?}", lhs, top, rhs);
                                 operand_stack.push(add_node(lhs, rhs, top));
-                            } else {
+                            }
+                            else {
                                 operator_stack.push(top);
                                 break;
                             }
@@ -199,5 +202,5 @@ pub fn parse(expr: &str) -> ASTNode {
 
     //println!("{:?}", operand_stack);
 
-    operand_stack.pop().unwrap()
+    operand_stack.pop()
 }
