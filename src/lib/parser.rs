@@ -1,4 +1,4 @@
-use lib::lexer::{tokenize, Number, Operator, Token, Variable};
+use lexer::{tokenize, Number, Operator, Token, Variable};
 use std::{collections::HashMap, fmt};
 
 pub enum Value {
