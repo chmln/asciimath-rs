@@ -34,21 +34,10 @@ impl cmp::PartialEq for Operator {
 }
 impl cmp::PartialOrd for Operator {
     fn partial_cmp(&self, other: &Operator) -> Option<cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl cmp::Ord for Operator {
-    fn cmp(&self, other: &Operator) -> cmp::Ordering {
-        let prec = self.get_precedence();
-        let other_prec = other.get_precedence();
-        if prec > other_prec {
-            cmp::Ordering::Greater
-        } else if prec == other_prec {
-            cmp::Ordering::Equal
-        } else {
-            cmp::Ordering::Less
-        }
+        Some(
+            self.get_precedence()
+                .cmp(&other.get_precedence()),
+        )
     }
 }
 
@@ -65,22 +54,15 @@ impl Operator {
     }
 
     pub fn is_right_associative(&self) -> bool {
-        match self {
-            Operator::Exponentiate => true,
-            _ => false,
-        }
+        *self == Operator::Exponentiate
     }
 }
-
+#[derive(Debug)]
 pub struct Number {
     pub value: f64,
 }
 
-impl fmt::Debug for Number {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.value)
-    }
-}
+//
 #[derive(Debug)]
 pub struct Variable {
     pub name: String,
@@ -95,53 +77,46 @@ pub enum Token {
 }
 
 pub fn tokenize(expr: &str) -> Vec<Token> {
-    let mut tokens: Vec<Token> = Vec::new();
     let trimmed = expr.replace(" ", "");
+    let mut len = trimmed.len();
     let mut chars = trimmed.chars();
 
+    let mut tokens: Vec<Token> = Vec::with_capacity(len);
     let mut temp = String::new();
 
-    loop {
-        if let Some(c) = chars.next() {
-            if c.is_alphanumeric() {
-                temp.push(c);
+    while let Some(c) = chars.next() {
+        if c.is_alphanumeric() {
+            temp.push(c);
+            if len > 1 {
+                len -= 1;
                 continue;
             }
-
-            if temp.len() > 0 {
-                if let Ok(num) = temp.parse::<f64>() {
-                    tokens.push(Token::Number(Number { value: num }))
-                } else {
-                    tokens.push(Token::Variable(Variable {
-                        name: temp.clone(),
-                    }))
-                }
-
-                temp.clear()
-            }
-
-            match c {
-                '+' => tokens.push(Token::Operator(Operator::Add)),
-                '-' => tokens.push(Token::Operator(Operator::Substract)),
-                '*' => tokens.push(Token::Operator(Operator::Multiply)),
-                '/' => tokens.push(Token::Operator(Operator::Divide)),
-                '^' => tokens.push(Token::Operator(Operator::Exponentiate)),
-                '(' => {
-                    tokens.push(Token::Operator(Operator::OpeningParenthesis))
-                }
-                ')' => tokens.push(Token::RightParenthesis),
-                _ => {}
-            }
-        } else {
-            // todo: refactor
-            if temp.len() > 0 {
-                if let Ok(value) = temp.parse::<f64>() {
-                    tokens.push(Token::Number(Number { value }))
-                }
-            }
-
-            break;
         }
+
+        if temp.len() > 0 {
+            if let Ok(num) = temp.parse::<f64>() {
+                tokens.push(Token::Number(Number { value: num }))
+            }
+            else {
+                tokens.push(Token::Variable(Variable {
+                    name: temp.clone(),
+                }))
+            }
+            temp.clear()
+        }
+
+        match c {
+            '+' => tokens.push(Token::Operator(Operator::Add)),
+            '-' => tokens.push(Token::Operator(Operator::Substract)),
+            '*' => tokens.push(Token::Operator(Operator::Multiply)),
+            '/' => tokens.push(Token::Operator(Operator::Divide)),
+            '^' => tokens.push(Token::Operator(Operator::Exponentiate)),
+            '(' => tokens.push(Token::Operator(Operator::OpeningParenthesis)),
+            ')' => tokens.push(Token::RightParenthesis),
+            _ => {}
+        }
+
+        len -= 1;
     }
 
     tokens
