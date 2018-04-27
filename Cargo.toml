@@ -2,6 +2,8 @@
 name = "asciimath"
 version = "0.1.0"
 authors = ["Gregory <gregory.mkv@gmail.com>"]
+description = "Mathematical expression parser and evaluator"
+license = "MIT"
 
 [lib]
 name = "asciimath"
