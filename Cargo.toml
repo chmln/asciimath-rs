@@ -6,3 +6,6 @@ authors = ["Gregory <gregory.mkv@gmail.com>"]
 [lib]
 name = "asciimath"
 path = "./src/lib/lib.rs"
+
+[profile.release]
+lto = true
