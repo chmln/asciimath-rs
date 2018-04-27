@@ -1,9 +1,10 @@
-use lib::lexer::{tokenize, Number, Operator, Token};
-use std::fmt;
+use lib::lexer::{tokenize, Number, Operator, Token, Variable};
+use std::{collections::HashMap, fmt};
 
 pub enum Value {
     Number(Number),
     Operator(Operator),
+    Variable(Variable),
 }
 
 pub struct ASTNode {
@@ -12,9 +13,34 @@ pub struct ASTNode {
     rhs: Option<Box<ASTNode>>,
 }
 
+pub struct Scope {
+    variables: HashMap<String, f64>,
+}
+
+impl Scope {
+    pub fn new() -> Scope {
+        Scope {
+            variables: HashMap::new(),
+        }
+    }
+
+    pub fn set_var<T>(&mut self, var_name: &str, value: T) -> ()
+    where
+        T: Copy + Into<f64> + PartialOrd + Clone,
+    {
+        self.variables
+            .insert(var_name.to_string(), value.into());
+    }
+
+    pub fn get_var(&self, var_name: &str) -> Option<&f64> {
+        self.variables.get(var_name)
+    }
+}
+
 type EvaluationResult = Result<f64, String>;
 
 pub trait Evaluate {
+    fn eval_with(self, scope: &Scope) -> EvaluationResult;
     fn eval(self) -> EvaluationResult;
 }
 
@@ -22,9 +48,10 @@ pub fn eval_node(
     operator: &Operator,
     lhs_val: ASTNode,
     rhs_val: ASTNode,
+    scope: &Scope,
 ) -> EvaluationResult {
-    let ref lhs_result = lhs_val.eval();
-    let ref rhs_result = rhs_val.eval();
+    let ref lhs_result = lhs_val.eval_with(scope);
+    let ref rhs_result = rhs_val.eval_with(scope);
 
     if let (Ok(lhs), Ok(rhs)) = (lhs_result, rhs_result) {
         match operator {
@@ -45,15 +72,28 @@ pub fn eval_node(
 }
 
 impl Evaluate for ASTNode {
-    fn eval(self) -> EvaluationResult {
+    fn eval_with(self, scope: &Scope) -> EvaluationResult {
         match self.value {
             Value::Operator(operator) => eval_node(
                 &operator,
                 *self.lhs.unwrap(),
                 *self.rhs.unwrap(),
+                scope,
             ),
             Value::Number(num) => Ok(num.value),
+            Value::Variable(var) => {
+                if let Some(value) = scope.get_var(&var.name) {
+                    Ok(value.clone())
+                } else {
+                    panic!("Variable not found: {}", var.name)
+                }
+            }
         }
+    }
+
+    fn eval(self) -> EvaluationResult {
+        let empty_scope = Scope::new();
+        self.eval_with(&empty_scope)
     }
 }
 
@@ -63,7 +103,8 @@ impl fmt::Debug for ASTNode {
             Value::Operator(ref op) => {
                 write!(f, "{:?} {:?} {:?}", self.lhs, self.rhs, op)
             }
-            Value::Number(Number { value }) => write!(f, "{}", value),
+            Value::Variable(ref var) => write!(f, "{}", var.name),
+            Value::Number(ref num) => write!(f, "{}", num.value),
         }
     }
 }
@@ -93,6 +134,11 @@ pub fn parse(expr: &str) -> ASTNode {
                 });
                 //println!("Add number to output: {:?}", num);
             }
+            Token::Variable(var) => operand_stack.push(ASTNode {
+                value: Value::Variable(var),
+                lhs: None,
+                rhs: None,
+            }),
             Token::Operator(op1) => {
                 while op1 != Operator::OpeningParenthesis {
                     if operator_stack.is_empty() {
@@ -150,6 +196,8 @@ pub fn parse(expr: &str) -> ASTNode {
         let operator = operator_stack.pop().unwrap();
         operand_stack.push(add_node(lhs, rhs, operator));
     }
+
+    //println!("{:?}", operand_stack);
 
     operand_stack.pop().unwrap()
 }

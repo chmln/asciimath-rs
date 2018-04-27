@@ -81,11 +81,16 @@ impl fmt::Debug for Number {
         write!(f, "{}", self.value)
     }
 }
+#[derive(Debug)]
+pub struct Variable {
+    pub name: String,
+}
 
 #[derive(Debug)]
 pub enum Token {
     Operator(Operator),
     Number(Number),
+    Variable(Variable),
     RightParenthesis,
 }
 
@@ -106,6 +111,10 @@ pub fn tokenize(expr: &str) -> Vec<Token> {
             if temp.len() > 0 {
                 if let Ok(num) = temp.parse::<f64>() {
                     tokens.push(Token::Number(Number { value: num }))
+                } else {
+                    tokens.push(Token::Variable(Variable {
+                        name: temp.clone(),
+                    }))
                 }
 
                 temp.clear()
