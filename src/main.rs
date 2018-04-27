@@ -10,6 +10,6 @@ fn main() {
 
     println!(
         "{:?}",
-        parse("4 + 4 * 2 / ( 1 - 5 ) ^ (2 - 2 ^ 3)").eval_with(&scope)
+        parse("x + 4 * 2 / ( 1 - 5 ) ^ (2 - 2 ^ 3)").eval_with(&scope)
     );
 }

@@ -61,13 +61,13 @@ pub fn eval_node(
             Operator::Divide => Ok(lhs / rhs),
             Operator::Exponentiate => Ok(lhs.powf(*rhs)),
             // this should never happen
-            _ => panic!("cannot evaluate a parenthesis"),
+            _ => Err("cannot evaluate a parenthesis".to_string()),
         }
     } else {
-        panic!(
+        Err(format!(
             "failed to evaluate {:?} {:?} {:?}",
             lhs_result, operator, rhs_result
-        )
+        ))
     }
 }
 
@@ -85,7 +85,7 @@ impl Evaluate for ASTNode {
                 if let Some(value) = scope.get_var(&var.name) {
                     Ok(value.clone())
                 } else {
-                    panic!("Variable not found: {}", var.name)
+                    Err(format!("Variable not found: {}", var.name))
                 }
             }
         }
@@ -186,7 +186,7 @@ pub fn parse(expr: &str) -> ASTNode {
             },
         };
         // println!("stack: {:?}", operator_stack);
-        // println!("output: {:?}", operand_stack);
+        //println!("output: {:?}", operand_stack);
         // println!("----------");
     }
 
