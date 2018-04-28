@@ -5,10 +5,10 @@ use asciimath::Evaluate;
 
 fn main() {
     let expression =
-        asciimath::parse("abcx + 4 * 2 / ( 1 - 5 ) ^ (2 - 2 ^ 3)").unwrap();
+        asciimath::parse("x + 4 * 2 / ( 1 - 5 ) ^ (2 - 2 ^ 3)").unwrap();
 
     let mut scope = asciimath::Scope::new();
-    scope.set_var("abcx", 3);
+    scope.set_var("x", 3);
 
     println!("{:?}", expression.eval_with(&scope));
 }
