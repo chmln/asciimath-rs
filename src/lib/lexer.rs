@@ -59,6 +59,15 @@ pub struct Number {
     pub value: f64,
 }
 
+pub fn num<T>(value: T) -> Number
+where
+    T: Into<f64>,
+{
+    Number {
+        value: value.into(),
+    }
+}
+
 //
 #[derive(Debug)]
 pub struct Variable {
@@ -72,6 +81,48 @@ pub enum Token {
     Variable(Variable),
     LeftParenthesis,
     RightParenthesis,
+}
+
+pub fn parse_implicit(expr: &str) -> Vec<Token> {
+    let mut tokens: Vec<Token> = Vec::with_capacity(expr.len());
+    let mut temp = String::new();
+    let mut chars_left = expr.len();
+
+    for ch in expr.chars() {
+        if ch.is_digit(10) {
+            temp.push(ch);
+            if chars_left > 1 {
+                chars_left -= 1;
+                continue;
+            }
+        }
+
+        if !temp.is_empty() {
+            tokens.push(Token::Number(num(temp.parse::<f64>().unwrap())));
+            tokens.push(Token::Operator(Operator::Multiply));
+            temp.clear();
+        }
+
+        if ch.is_alphabetic() {
+            tokens.push(Token::Variable(Variable {
+                name: ch.to_string(),
+            }));
+            tokens.push(Token::Operator(Operator::Multiply));
+        }
+
+        chars_left -= 1;
+    }
+
+    tokens.pop();
+    tokens
+    // if c.is_numeric() {
+    //     Token::Number(Number { value: c.parse::<f64>() })
+    // }
+    // else {
+    //     Token::Variable(Variable {
+    //         name: c,
+    //     })
+    // }
 }
 
 pub fn tokenize(expr: &str) -> Vec<Token> {
@@ -92,14 +143,7 @@ pub fn tokenize(expr: &str) -> Vec<Token> {
         }
 
         if temp.len() > 0 {
-            if let Ok(num) = temp.parse::<f64>() {
-                tokens.push(Token::Number(Number { value: num }))
-            }
-            else {
-                tokens.push(Token::Variable(Variable {
-                    name: temp.clone(),
-                }))
-            }
+            tokens.append(&mut parse_implicit(&temp));
             temp.clear()
         }
 
@@ -116,6 +160,8 @@ pub fn tokenize(expr: &str) -> Vec<Token> {
 
         len -= 1;
     }
+
+    println!("{:?}", tokens);
 
     tokens
 }

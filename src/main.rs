@@ -4,11 +4,12 @@ extern crate asciimath;
 use asciimath::Evaluate;
 
 fn main() {
-    let expression =
-        asciimath::parse("x + 4 * 2 / ( 1 - 5 ) ^ (2 - 2 ^ 3)").unwrap();
+    let expression = asciimath::parse("10xyz+10").unwrap();
 
     let mut scope = asciimath::Scope::new();
-    scope.set_var("x", 3);
+    scope.set_var("x", 1);
+    scope.set_var("y", 2);
+    scope.set_var("z", 3);
 
     println!("{:?}", expression.eval_with(&scope));
 }
