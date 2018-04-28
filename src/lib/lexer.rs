@@ -115,14 +115,6 @@ pub fn parse_implicit(expr: &str) -> Vec<Token> {
 
     tokens.pop();
     tokens
-    // if c.is_numeric() {
-    //     Token::Number(Number { value: c.parse::<f64>() })
-    // }
-    // else {
-    //     Token::Variable(Variable {
-    //         name: c,
-    //     })
-    // }
 }
 
 pub fn tokenize(expr: &str) -> Vec<Token> {
@@ -144,7 +136,10 @@ pub fn tokenize(expr: &str) -> Vec<Token> {
 
         if temp.len() > 0 {
             tokens.append(&mut parse_implicit(&temp));
-            temp.clear()
+            temp.clear();
+            if c == '(' {
+                tokens.push(Token::Operator(Operator::Multiply));
+            }
         }
 
         match c {

@@ -4,7 +4,7 @@ extern crate asciimath;
 use asciimath::Evaluate;
 
 fn main() {
-    let expression = asciimath::parse("10xyz+10").unwrap();
+    let expression = asciimath::parse("2(xyz(20))").unwrap();
 
     let mut scope = asciimath::Scope::new();
     scope.set_var("x", 1);
