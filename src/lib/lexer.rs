@@ -7,7 +7,6 @@ pub enum Operator {
     Multiply,
     Divide,
     Exponentiate,
-    OpeningParenthesis,
 }
 
 impl fmt::Debug for Operator {
@@ -21,7 +20,6 @@ impl fmt::Debug for Operator {
                 Operator::Multiply => "*",
                 Operator::Divide => "/",
                 Operator::Exponentiate => "^",
-                Operator::OpeningParenthesis => "(",
             }
         )
     }
@@ -49,7 +47,6 @@ impl Operator {
             Operator::Multiply => 3,
             Operator::Divide => 3,
             Operator::Exponentiate => 4,
-            _ => -1,
         }
     }
 
@@ -73,6 +70,7 @@ pub enum Token {
     Operator(Operator),
     Number(Number),
     Variable(Variable),
+    LeftParenthesis,
     RightParenthesis,
 }
 
@@ -111,7 +109,7 @@ pub fn tokenize(expr: &str) -> Vec<Token> {
             '*' => tokens.push(Token::Operator(Operator::Multiply)),
             '/' => tokens.push(Token::Operator(Operator::Divide)),
             '^' => tokens.push(Token::Operator(Operator::Exponentiate)),
-            '(' => tokens.push(Token::Operator(Operator::OpeningParenthesis)),
+            '(' => tokens.push(Token::LeftParenthesis),
             ')' => tokens.push(Token::RightParenthesis),
             _ => {}
         }
