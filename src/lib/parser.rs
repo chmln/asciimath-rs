@@ -3,7 +3,7 @@ use std::{collections::HashMap, fmt};
 
 pub enum Value {
     Number(Number),
-    Operator(Operator),
+    Token(Token),
     Variable(Variable),
 }
 
@@ -60,8 +60,6 @@ pub fn eval_node(
             Operator::Multiply => Ok(lhs * rhs),
             Operator::Divide => Ok(lhs / rhs),
             Operator::Exponentiate => Ok(lhs.powf(*rhs)),
-            // this should never happen
-            _ => Err("cannot evaluate a parenthesis".to_string()),
         }
     }
     else {
@@ -75,12 +73,18 @@ pub fn eval_node(
 impl Evaluate for ASTNode {
     fn eval_with(self, scope: &Scope) -> EvaluationResult {
         match self.value {
-            Value::Operator(operator) => eval_node(
-                &operator,
-                *self.lhs.unwrap(),
-                *self.rhs.unwrap(),
-                scope,
-            ),
+            Value::Token(token) => match token {
+                Token::Operator(operator) => eval_node(
+                    &operator,
+                    *self.lhs.unwrap(),
+                    *self.rhs.unwrap(),
+                    scope,
+                ),
+                _ => Err(format!(
+                    "token should not be eval'd: {:?}",
+                    token
+                )),
+            },
             Value::Number(num) => Ok(num.value),
             Value::Variable(var) => {
                 if let Some(value) = scope.get_var(&var.name) {
@@ -102,8 +106,8 @@ impl Evaluate for ASTNode {
 impl fmt::Debug for ASTNode {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.value {
-            Value::Operator(ref op) => {
-                write!(f, "{:?} {:?} {:?}", self.lhs, self.rhs, op)
+            Value::Token(ref token) => {
+                write!(f, "{:?} {:?} {:?}", self.lhs, self.rhs, token)
             }
             Value::Variable(ref var) => write!(f, "{}", var.name),
             Value::Number(ref num) => write!(f, "{}", num.value),
@@ -114,11 +118,11 @@ impl fmt::Debug for ASTNode {
 pub fn parse(expr: &str) -> Option<ASTNode> {
     let tokens = tokenize(&expr);
 
-    let mut operator_stack: Vec<Operator> = Vec::new();
+    let mut operator_stack: Vec<Token> = Vec::new();
     let mut operand_stack: Vec<ASTNode> = Vec::new();
 
-    let add_node = |lhs, rhs, operator: Operator| ASTNode {
-        value: Value::Operator(operator),
+    let add_node = |lhs, rhs, token: Token| ASTNode {
+        value: Value::Token(token),
         lhs: Some(Box::new(lhs)),
         rhs: Some(Box::new(rhs)),
     };
@@ -141,52 +145,65 @@ pub fn parse(expr: &str) -> Option<ASTNode> {
                 lhs: None,
                 rhs: None,
             }),
-            Token::Operator(op1) => {
-                while op1 != Operator::OpeningParenthesis {
-                    if operator_stack.is_empty() {
+            Token::RightParenthesis => while !operator_stack.is_empty() {
+                let top = operator_stack.pop().unwrap();
+                match top {
+                    Token::LeftParenthesis => {
                         break;
                     }
+                    Token::Operator(op) => {
+                        let rhs = operand_stack.pop().expect("missing operand");
+                        let lhs = operand_stack.pop().expect("missing operand");
+                        operand_stack.push(add_node(
+                            lhs,
+                            rhs,
+                            Token::Operator(op),
+                        ));
+                    }
+                    _ => {}
+                }
+            },
+
+            Token::LeftParenthesis => {
+                operator_stack.push(token);
+            }
+
+            Token::Operator(op1) => {
+                while !operator_stack.is_empty() {
                     let top = operator_stack.pop().unwrap();
-                    //println!("top: {:?}", top);
+
                     match top {
-                        Operator::OpeningParenthesis => {
-                            operator_stack.push(top);
-                            break;
-                        }
-                        _ => {
-                            if top > op1
-                                || (top == op1 && !op1.is_right_associative())
+                        Token::Operator(top_operator) => {
+                            if top_operator > op1
+                                || (top_operator == op1
+                                    && !op1.is_right_associative())
                             {
                                 let rhs = operand_stack.pop().unwrap();
                                 let lhs = operand_stack.pop().unwrap();
-                                //println!("{:?} {:?} {:?}", lhs, top, rhs);
-                                operand_stack.push(add_node(lhs, rhs, top));
+                                //println!("{:?} {:?} {:?}", lhs, top_operator, rhs);
+                                operand_stack.push(add_node(
+                                    lhs,
+                                    rhs,
+                                    Token::Operator(top_operator),
+                                ));
                             }
                             else {
-                                operator_stack.push(top);
+                                operator_stack
+                                    .push(Token::Operator(top_operator));
                                 break;
                             }
+                        }
+                        _ => {
+                            operator_stack.push(top);
+                            break;
+                            //println!("{:?}", top);
                         }
                     }
                 }
 
                 //println!("Push op to stack: {:?}", op1);
-                operator_stack.push(op1);
+                operator_stack.push(Token::Operator(op1));
             }
-
-            Token::RightParenthesis => while !operator_stack.is_empty() {
-                let top = operator_stack.pop().unwrap();
-                match top {
-                    Operator::OpeningParenthesis => {
-                        break;
-                    }
-                    _ => {
-                        let rhs = operand_stack.pop().expect("missing operand");
-                        let lhs = operand_stack.pop().expect("missing operand");
-                        operand_stack.push(add_node(lhs, rhs, top));
-                    }
-                }
-            },
         };
         // println!("stack: {:?}", operator_stack);
         //println!("output: {:?}", operand_stack);
