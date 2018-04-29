@@ -1,7 +1,8 @@
-use tokens::{Number, Operator, Token, Variable};
+use std::collections::VecDeque;
+use tokens::{Function, Number, Operator, Token, Variable};
 
-pub fn parse_implicit(expr: &str) -> Vec<Token> {
-    let mut tokens: Vec<Token> = Vec::with_capacity(expr.len());
+pub fn parse_implicit(expr: &str) -> VecDeque<Token> {
+    let mut tokens: VecDeque<Token> = VecDeque::with_capacity(expr.len());
     let mut temp = String::new();
     let mut chars_left = expr.len();
 
@@ -15,24 +16,24 @@ pub fn parse_implicit(expr: &str) -> Vec<Token> {
         }
 
         if !temp.is_empty() {
-            tokens.push(Token::Number(Number::new(
+            tokens.push_back(Token::Number(Number::new(
                 temp.parse::<f64>().unwrap(),
             )));
-            tokens.push(Token::Operator(Operator::Multiply));
+            //tokens.push(Token::Operator(Operator::Multiply));
             temp.clear();
         }
 
         if ch.is_alphabetic() {
-            tokens.push(Token::Variable(Variable {
+            tokens.push_back(Token::Variable(Variable {
                 name: ch.to_string(),
             }));
-            tokens.push(Token::Operator(Operator::Multiply));
+            //tokens.push(Token::Operator(Operator::Multiply));
         }
 
         chars_left -= 1;
     }
 
-    tokens.pop();
+    //tokens.pop();
     tokens
 }
 
@@ -45,20 +46,21 @@ pub fn get_token(ch: char) -> Option<Token> {
         '^' => Some(Token::Operator(Operator::Exponentiate)),
         '(' => Some(Token::LeftParenthesis),
         ')' => Some(Token::RightParenthesis),
+        ',' => Some(Token::Comma),
         _ => None,
     }
 }
 
-pub fn tokenize(expr: &str) -> Vec<Token> {
+pub fn tokenize(expr: &str) -> VecDeque<Token> {
     let trimmed = expr.replace(" ", "");
     let mut len = trimmed.len();
     let mut chars = trimmed.chars();
 
-    let mut tokens: Vec<Token> = Vec::with_capacity(len);
+    let mut tokens: VecDeque<Token> = VecDeque::with_capacity(len);
     let mut temp = String::new();
 
     while let Some(c) = chars.next() {
-        if c.is_alphanumeric() {
+        if c.is_alphanumeric() || c == '_' {
             temp.push(c);
             if len > 1 {
                 len -= 1;
@@ -66,19 +68,32 @@ pub fn tokenize(expr: &str) -> Vec<Token> {
             }
         }
 
+        let token = get_token(c);
+
         if temp.len() > 0 {
-            tokens.append(&mut parse_implicit(&temp));
+            if c == '(' {
+                tokens
+                    .push_back(Token::Function(Function::new(temp.clone(), 1)));
+                temp.clear();
+                len -= 1;
+                continue;
+            }
+            else {
+                tokens.append(&mut parse_implicit(&temp));
+            }
+
             temp.clear();
         }
 
-        if let Some(recognized_token) = get_token(c) {
-            tokens.push(recognized_token);
+        if let Some(recognized_token) = token {
+            tokens.push_back(recognized_token);
         }
 
         len -= 1;
     }
 
-    println!("{:?}", tokens);
+    // println!("Tokens: {:?}", tokens);
+    // println!("--------------------");
 
     tokens
 }
