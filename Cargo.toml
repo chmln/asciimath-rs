@@ -7,7 +7,7 @@ license = "MIT"
 
 [lib]
 name = "asciimath"
-path = "./src/lib/lib.rs"
+path = "./src/lib.rs"
 
 [profile.release]
 lto = true
