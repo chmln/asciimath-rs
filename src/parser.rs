@@ -1,8 +1,8 @@
 use lexer::tokenize;
 use std::collections::VecDeque;
 
-use tokens::{Number, Token};
-use {Node, Value};
+use tokens::Token;
+use Node;
 
 pub fn parse(expr: &str) -> Result<Node, String> {
     parse_tokens(tokenize(expr))
@@ -13,13 +13,13 @@ pub fn parse_tokens(tokens: VecDeque<Token>) -> Result<Node, String> {
     let mut operand_stack: Vec<Node> = Vec::new();
 
     let add_node = |lhs, rhs: Node, token: Token| Node {
-        value: Value::Token(token),
+        value: token,
         lhs: Some(Box::new(lhs)),
         rhs: Some(Box::new(rhs)),
     };
 
     let add_fn_node = |rhs: Node, token: Token| Node {
-        value: Value::Token(token),
+        value: token,
         lhs: None,
         rhs: Some(Box::new(rhs)),
     };
@@ -29,16 +29,14 @@ pub fn parse_tokens(tokens: VecDeque<Token>) -> Result<Node, String> {
         match token {
             Token::Number(num) => {
                 operand_stack.push(Node {
-                    value: Value::Number(Number {
-                        value: num.value,
-                    }),
+                    value: Token::Number(num),
                     lhs: None,
                     rhs: None,
                 });
                 //println!("Add number to output: {:?}", num);
             }
             Token::Variable(var) => operand_stack.push(Node {
-                value: Value::Variable(var),
+                value: Token::Variable(var),
                 lhs: None,
                 rhs: None,
             }),

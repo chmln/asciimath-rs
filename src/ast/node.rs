@@ -1,9 +1,9 @@
-use ast::{Scope, Value};
+use ast::Scope;
 use std::fmt;
 use tokens::{Operator, Token};
 
 pub struct Node {
-    pub value: Value,
+    pub value: Token,
     pub lhs: Option<Box<Node>>,
     pub rhs: Option<Box<Node>>,
 }
@@ -51,26 +51,21 @@ impl Evaluate for Node {
     fn eval_with(self, scope: &Scope) -> EvaluationResult {
         //println!("{:?}", self);
         match self.value {
-            Value::Token(token) => match token {
-                Token::Operator(operator) => eval_node(
-                    &operator,
-                    *self.lhs.unwrap(),
-                    *self.rhs.unwrap(),
-                    scope,
-                ),
-                Token::Function(f) => {
-                    if f.name == "multiply_by_2" {
-                        return Ok(self.rhs.unwrap().eval_with(scope).unwrap() * 2.0);
-                    }
-                    unimplemented!()
+            Token::Operator(operator) => eval_node(
+                &operator,
+                *self.lhs.unwrap(),
+                *self.rhs.unwrap(),
+                scope,
+            ),
+            Token::Function(f) => {
+                if f.name == "multiply_by_2" {
+                    return Ok(self.rhs.unwrap().eval_with(scope).unwrap() * 2.0);
                 }
-                _ => Err(format!(
-                    "token should not be eval'd: {:?}",
-                    token
-                )),
-            },
-            Value::Number(num) => Ok(num.value),
-            Value::Variable(var) => {
+                unimplemented!()
+            }
+
+            Token::Number(num) => Ok(num.value),
+            Token::Variable(var) => {
                 if let Some(value) = scope.get_var(&var.name) {
                     Ok(value.clone())
                 }
@@ -78,6 +73,10 @@ impl Evaluate for Node {
                     Err(format!("Variable not found: {}", var.name))
                 }
             }
+            _ => Err(format!(
+                "token should not be eval'd: {:?}",
+                self.value
+            )),
         }
     }
 
@@ -90,11 +89,13 @@ impl Evaluate for Node {
 impl fmt::Debug for Node {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.value {
-            Value::Token(ref token) => {
-                write!(f, "{:?} {:?} {:?}", self.lhs, self.rhs, token)
-            }
-            Value::Variable(ref var) => write!(f, "{}", var.name),
-            Value::Number(ref num) => write!(f, "{}", num.value),
+            Token::Variable(ref var) => write!(f, "{}", var.name),
+            Token::Number(ref num) => write!(f, "{}", num.value),
+            _ => write!(
+                f,
+                "{:?} {:?} {:?}",
+                self.lhs, self.rhs, self.value
+            ),
         }
     }
 }
