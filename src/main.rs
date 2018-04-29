@@ -4,12 +4,10 @@ extern crate asciimath;
 use asciimath::Evaluate;
 
 fn main() {
-    let expression = asciimath::parse("2(xyz(20))").unwrap();
+    let expression = asciimath::parse("2(3)").unwrap();
 
     let mut scope = asciimath::Scope::new();
-    scope.set_var("x", 1);
-    scope.set_var("y", 2);
-    scope.set_var("z", 3);
+    scope.set_var("x", 2);
 
     println!("{:?}", expression.eval_with(&scope));
 }

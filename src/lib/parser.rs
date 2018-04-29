@@ -1,5 +1,6 @@
-use lexer::{tokenize, Number, Operator, Token, Variable};
+use lexer::tokenize;
 use std::{collections::HashMap, fmt};
+use tokens::{Number, Operator, Token, Variable};
 
 pub enum Value {
     Number(Number),
