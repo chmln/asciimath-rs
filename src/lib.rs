@@ -1,7 +1,5 @@
 //! A mathematical expression parsing and evaluation library.
 //!
-//! The foo crate is meant to be used for bar.
-//!
 //! # Typical Use
 //!
 //! ```
