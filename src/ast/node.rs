@@ -3,7 +3,7 @@ use std::fmt;
 use tokens::{Operator, Token};
 
 pub struct Node {
-    pub value: Token,
+    pub token: Token,
     pub lhs: Option<Box<Node>>,
     pub rhs: Option<Box<Node>>,
 }
@@ -50,7 +50,7 @@ pub fn eval_node(
 impl Evaluate for Node {
     fn eval_with(self, scope: &Scope) -> EvaluationResult {
         //println!("{:?}", self);
-        match self.value {
+        match self.token {
             Token::Operator(operator) => eval_node(
                 &operator,
                 *self.lhs.unwrap(),
@@ -75,7 +75,7 @@ impl Evaluate for Node {
             }
             _ => Err(format!(
                 "token should not be eval'd: {:?}",
-                self.value
+                self.token
             )),
         }
     }
@@ -88,13 +88,13 @@ impl Evaluate for Node {
 
 impl fmt::Debug for Node {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self.value {
+        match self.token {
             Token::Variable(ref var) => write!(f, "{}", var.name),
             Token::Number(ref num) => write!(f, "{}", num.value),
             _ => write!(
                 f,
                 "{:?} {:?} {:?}",
-                self.lhs, self.rhs, self.value
+                self.lhs, self.rhs, self.token
             ),
         }
     }
