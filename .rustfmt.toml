@@ -7,7 +7,6 @@ indent_style = "Block"
 wrap_comments = false
 comment_width = 80
 normalize_comments = false
-license_template_path = ""
 format_strings = false
 empty_item_single_line = true
 struct_lit_single_line = true
