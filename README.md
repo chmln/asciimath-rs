@@ -1,3 +1,8 @@
+
+[![Crates.io](https://img.shields.io/crates/v/asciimath.svg)](https://crates.io/crates/asciimath)
+[![](https://docs.rs/asciimath/badge.svg)](https://docs.rs/asciimath)
+
+
 # asciimath-rs
 
 Parses mathematical (infix) expressions into an Abstract Syntax Tree using  Dijkstra's "shunting yard" algorithm. 
