@@ -1,4 +1,4 @@
-use tokens::{Number, Operator, Variable};
+use tokens::{func::Function, Number, Operator, Variable};
 
 #[derive(Debug)]
 pub enum Token {
@@ -7,4 +7,6 @@ pub enum Token {
     Variable(Variable),
     LeftParenthesis,
     RightParenthesis,
+    Comma,
+    Function(Function),
 }
