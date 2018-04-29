@@ -1,5 +1,7 @@
+mod ast;
 mod lexer;
 mod parser;
 mod tokens;
 
-pub use parser::{parse, Evaluate, Scope};
+pub use ast::{Evaluate, Node, Scope, Value};
+pub use parser::parse;
