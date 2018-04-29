@@ -11,7 +11,13 @@ pub struct Node {
 pub type EvaluationResult = Result<f64, String>;
 
 pub trait Evaluate {
+    /// Evaluates the node/expression with a given variable scope.
+    ///
     fn eval_with(self, scope: &Scope) -> EvaluationResult;
+
+    /// Evaluates the node/expression without any variables.
+    ///
+    /// This is just a shortcut to evaluate expressions without variables.
     fn eval(self) -> EvaluationResult;
 }
 
