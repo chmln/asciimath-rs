@@ -1,87 +1,4 @@
-use std::{cmp, fmt};
-
-#[derive(Clone, Copy, Eq)]
-pub enum Operator {
-    Add,
-    Substract,
-    Multiply,
-    Divide,
-    Exponentiate,
-}
-
-impl fmt::Debug for Operator {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                Operator::Add => "+",
-                Operator::Substract => "-",
-                Operator::Multiply => "*",
-                Operator::Divide => "/",
-                Operator::Exponentiate => "^",
-            }
-        )
-    }
-}
-
-impl cmp::PartialEq for Operator {
-    fn eq(&self, other: &Operator) -> bool {
-        self.get_precedence() == other.get_precedence()
-    }
-}
-impl cmp::PartialOrd for Operator {
-    fn partial_cmp(&self, other: &Operator) -> Option<cmp::Ordering> {
-        Some(
-            self.get_precedence()
-                .cmp(&other.get_precedence()),
-        )
-    }
-}
-
-impl Operator {
-    pub fn get_precedence(&self) -> i8 {
-        match self {
-            Operator::Add => 2,
-            Operator::Substract => 2,
-            Operator::Multiply => 3,
-            Operator::Divide => 3,
-            Operator::Exponentiate => 4,
-        }
-    }
-
-    pub fn is_right_associative(&self) -> bool {
-        *self == Operator::Exponentiate
-    }
-}
-#[derive(Debug)]
-pub struct Number {
-    pub value: f64,
-}
-
-pub fn num<T>(value: T) -> Number
-where
-    T: Into<f64>,
-{
-    Number {
-        value: value.into(),
-    }
-}
-
-//
-#[derive(Debug)]
-pub struct Variable {
-    pub name: String,
-}
-
-#[derive(Debug)]
-pub enum Token {
-    Operator(Operator),
-    Number(Number),
-    Variable(Variable),
-    LeftParenthesis,
-    RightParenthesis,
-}
+use tokens::{Number, Operator, Token, Variable};
 
 pub fn parse_implicit(expr: &str) -> Vec<Token> {
     let mut tokens: Vec<Token> = Vec::with_capacity(expr.len());
@@ -98,7 +15,9 @@ pub fn parse_implicit(expr: &str) -> Vec<Token> {
         }
 
         if !temp.is_empty() {
-            tokens.push(Token::Number(num(temp.parse::<f64>().unwrap())));
+            tokens.push(Token::Number(Number::new(
+                temp.parse::<f64>().unwrap(),
+            )));
             tokens.push(Token::Operator(Operator::Multiply));
             temp.clear();
         }
@@ -115,6 +34,19 @@ pub fn parse_implicit(expr: &str) -> Vec<Token> {
 
     tokens.pop();
     tokens
+}
+
+pub fn get_token(ch: char) -> Option<Token> {
+    match ch {
+        '+' => Some(Token::Operator(Operator::Add)),
+        '-' => Some(Token::Operator(Operator::Substract)),
+        '*' => Some(Token::Operator(Operator::Multiply)),
+        '/' => Some(Token::Operator(Operator::Divide)),
+        '^' => Some(Token::Operator(Operator::Exponentiate)),
+        '(' => Some(Token::LeftParenthesis),
+        ')' => Some(Token::RightParenthesis),
+        _ => None,
+    }
 }
 
 pub fn tokenize(expr: &str) -> Vec<Token> {
@@ -137,20 +69,10 @@ pub fn tokenize(expr: &str) -> Vec<Token> {
         if temp.len() > 0 {
             tokens.append(&mut parse_implicit(&temp));
             temp.clear();
-            if c == '(' {
-                tokens.push(Token::Operator(Operator::Multiply));
-            }
         }
 
-        match c {
-            '+' => tokens.push(Token::Operator(Operator::Add)),
-            '-' => tokens.push(Token::Operator(Operator::Substract)),
-            '*' => tokens.push(Token::Operator(Operator::Multiply)),
-            '/' => tokens.push(Token::Operator(Operator::Divide)),
-            '^' => tokens.push(Token::Operator(Operator::Exponentiate)),
-            '(' => tokens.push(Token::LeftParenthesis),
-            ')' => tokens.push(Token::RightParenthesis),
-            _ => {}
+        if let Some(recognized_token) = get_token(c) {
+            tokens.push(recognized_token);
         }
 
         len -= 1;
