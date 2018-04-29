@@ -8,6 +8,7 @@ pub fn parse(expr: &str) -> Result<Node, String> {
     parse_tokens(tokenize(expr))
 }
 
+// TODO: break this down
 pub fn parse_tokens(tokens: VecDeque<Token>) -> Result<Node, String> {
     let mut operator_stack: Vec<Token> = Vec::new();
     let mut operand_stack: Vec<Node> = Vec::new();
