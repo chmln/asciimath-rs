@@ -29,3 +29,8 @@ fn simple_vars() {
         parse("x^2-16").unwrap().eval_with(&scope)
     );
 }
+
+#[test]
+fn simple_func() {
+    assert_eq!(Ok(2.0), parse("max(1,2)").unwrap().eval());
+}
