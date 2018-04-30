@@ -31,6 +31,18 @@ fn simple_vars() {
 }
 
 #[test]
+fn too_many_brackets() {
+    let mut scope = Scope::new();
+    scope.set_var("x", 16);
+    assert_eq!(
+        Ok(240.0),
+        parse("((((((x^2))-((16))))))")
+            .unwrap()
+            .eval_with(&scope)
+    );
+}
+
+#[test]
 fn simple_func() {
     assert_eq!(Ok(2.0), parse("max(1,2)").unwrap().eval());
 }
