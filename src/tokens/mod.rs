@@ -9,3 +9,5 @@ pub use self::number::Number;
 pub use self::operator::Operator;
 pub use self::token::Token;
 pub use self::variable::Variable;
+
+pub type TokenList = Vec<Token>;

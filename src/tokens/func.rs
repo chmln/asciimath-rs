@@ -4,7 +4,7 @@ pub struct Function {
 }
 
 impl Function {
-    pub fn new(name: String, _num_args: u8) -> Function {
+    pub fn new(name: String) -> Function {
         Function { name }
     }
 }
