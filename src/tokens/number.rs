@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Number {
     pub value: f64,
 }

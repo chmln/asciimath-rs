@@ -1,6 +1,6 @@
 use tokens::{Function, Number, Operator, Variable};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Token {
     Operator(Operator),
     Number(Number),
