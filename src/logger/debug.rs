@@ -1,7 +1,12 @@
-use super::super::DEBUG;
+#[cfg(debug_assertions)]
+#[macro_export]
+macro_rules! debug {
+    ($( $args:expr ),*) => { println!( $( $args ),* ); }
+}
 
-pub fn log(msg: String) -> () {
-    if DEBUG == true {
-        println!("{}", msg);
-    }
+// Non-debug version
+#[cfg(not(debug_assertions))]
+#[macro_export]
+macro_rules! debug {
+    ($($args:expr),*) => {};
 }

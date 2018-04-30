@@ -13,9 +13,10 @@
 //!
 //! assert_eq!(Ok(185193.0), parsed_expr.eval_with(&scope));
 //! ```
+#[macro_use]
+mod logger;
 mod ast;
 mod lexer;
-mod logger;
 mod parser;
 mod tokens;
 

@@ -1,2 +1,2 @@
-mod debug;
-pub use self::debug::log;
+#[macro_use]
+pub mod debug;

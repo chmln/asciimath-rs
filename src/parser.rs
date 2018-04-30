@@ -2,7 +2,6 @@ use lexer::tokenize;
 use std::collections::VecDeque;
 
 use ast::Node;
-use logger::log;
 use tokens::{Function, Operator, Token};
 
 pub fn parse(expr: &str) -> Result<Node, String> {
@@ -84,7 +83,7 @@ pub fn encounter_operator(
         }
     }
 
-    log(format!("Push op to stack: {:?}", op1));
+    debug!("Push op to stack: {:?}", op1);
     operators.push(Token::Operator(op1));
 }
 
@@ -93,14 +92,14 @@ pub fn parse_tokens(tokens: VecDeque<Token>) -> Result<Node, String> {
     let mut operands: Vec<Node> = Vec::new();
 
     for token in tokens {
-        log(format!("TOKEN: {:?}", token));
+        debug!("TOKEN: {:?}", token);
         match token {
             Token::Number(num) => {
                 operands.push(Node {
                     token: Token::Number(num),
                     args: None,
                 });
-                log(format!("Add number to output: "));
+                debug!("Add number to output");
             },
             Token::Variable(var) => operands.push(Node {
                 token: Token::Variable(var),
@@ -116,9 +115,9 @@ pub fn parse_tokens(tokens: VecDeque<Token>) -> Result<Node, String> {
             Token::Function(f) => operators.push(Token::Function(f)),
             Token::Comma => operands.push(make_node(token, None)),
         };
-        log(format!("stack: {:?}", operators));
-        log(format!("output: {:?}", operands));
-        log(format!("----------"));
+        debug!("stack: {:?}", operators);
+        debug!("output: {:?}", operands);
+        debug!("----------");
     }
 
     while !operators.is_empty() {
