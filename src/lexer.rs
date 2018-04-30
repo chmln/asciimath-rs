@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 use tokens::{Function, Number, Operator, Token, Variable};
 
-pub fn parse_implicit(expr: &str) -> VecDeque<Token> {
+fn parse_implicit(expr: &str) -> VecDeque<Token> {
     let mut tokens: VecDeque<Token> = VecDeque::with_capacity(expr.len());
     let mut temp = String::new();
     let mut chars_left = expr.len();
@@ -37,7 +37,7 @@ pub fn parse_implicit(expr: &str) -> VecDeque<Token> {
     tokens
 }
 
-pub fn get_token(ch: char) -> Option<Token> {
+fn get_token(ch: char) -> Option<Token> {
     match ch {
         '+' => Some(Token::Operator(Operator::Add)),
         '-' => Some(Token::Operator(Operator::Substract)),
