@@ -87,7 +87,7 @@ pub fn encounter_operator(
     operators.push(Token::Operator(op1));
 }
 
-pub fn parse_tokens(tokens: VecDeque<Token>) -> Result<Node, String> {
+pub fn parse_tokens(tokens: Vec<Token>) -> Result<Node, String> {
     let mut operators: Vec<Token> = Vec::new();
     let mut operands: Vec<Node> = Vec::new();
 

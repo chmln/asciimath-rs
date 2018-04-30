@@ -1,8 +1,7 @@
-use std::collections::VecDeque;
 use tokens::{Function, Number, Operator, Token, Variable};
 
-fn parse_implicit(expr: &str) -> VecDeque<Token> {
-    let mut tokens: VecDeque<Token> = VecDeque::with_capacity(expr.len());
+fn parse_implicit(expr: &str) -> Vec<Token> {
+    let mut tokens: Vec<Token> = Vec::with_capacity(expr.len());
     let mut temp = String::new();
     let mut chars_left = expr.len();
 
@@ -16,18 +15,17 @@ fn parse_implicit(expr: &str) -> VecDeque<Token> {
         }
 
         if !temp.is_empty() {
-            tokens.push_back(Token::Number(Number::new(
+            tokens.push(Token::Number(Number::new(
                 temp.parse::<f64>().unwrap(),
             )));
-            //tokens.push(Token::Operator(Operator::Multiply));
+
             temp.clear();
         }
 
         if ch.is_alphabetic() {
-            tokens.push_back(Token::Variable(Variable {
+            tokens.push(Token::Variable(Variable {
                 name: ch.to_string(),
             }));
-            //tokens.push(Token::Operator(Operator::Multiply));
         }
 
         chars_left -= 1;
@@ -51,12 +49,12 @@ fn get_token(ch: char) -> Option<Token> {
     }
 }
 
-pub fn tokenize(expr: &str) -> VecDeque<Token> {
+pub fn tokenize(expr: &str) -> Vec<Token> {
     let trimmed = expr.replace(" ", "");
     let mut len = trimmed.len();
     let mut chars = trimmed.chars();
 
-    let mut tokens: VecDeque<Token> = VecDeque::with_capacity(len);
+    let mut tokens: Vec<Token> = Vec::with_capacity(len);
     let mut temp = String::new();
 
     while let Some(c) = chars.next() {
@@ -72,8 +70,7 @@ pub fn tokenize(expr: &str) -> VecDeque<Token> {
 
         if temp.len() > 0 {
             if c == '(' {
-                tokens
-                    .push_back(Token::Function(Function::new(temp.clone(), 1)));
+                tokens.push(Token::Function(Function::new(temp.clone(), 1)));
                 temp.clear();
                 len -= 1;
                 continue;
@@ -86,7 +83,7 @@ pub fn tokenize(expr: &str) -> VecDeque<Token> {
         }
 
         if let Some(recognized_token) = token {
-            tokens.push_back(recognized_token);
+            tokens.push(recognized_token);
         }
 
         len -= 1;
