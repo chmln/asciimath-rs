@@ -19,7 +19,7 @@ Simple, bare-bones, and efficient.
   - [ ] basic (sin, cos, etc)
   - [ ] user-defined
 - [ ] matrices (maybe)
-- [ ] documentation
+- [x] documentation
 
 ## Non-goals
 
