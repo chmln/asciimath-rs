@@ -1,8 +1,10 @@
 use lexer::tokenize;
 use std::collections::VecDeque;
 
-use ast::Node;
-use tokens::{Function, Operator, Token};
+use ast::{FunctionArgs, Node};
+use tokens::{Function, Operator, Token, TokenList};
+
+type NodeList = Vec<Node>;
 
 pub fn parse(expr: &str) -> Result<Node, String> {
     parse_tokens(tokenize(expr))
@@ -12,12 +14,13 @@ fn make_node(token: Token, args: Option<VecDeque<Node>>) -> Node {
     Node { token, args }
 }
 
-fn encounter_func(f: Function, operands: &mut Vec<Node>) {
-    let mut args: VecDeque<Node> = VecDeque::with_capacity(2);
+fn encounter_func(f: Function, operands: &mut NodeList) {
+    let mut args: FunctionArgs = VecDeque::with_capacity(2);
+
+    // ASSUMPTION: at least one argument per function
     args.push_front(operands.pop().unwrap());
 
-    while !operands.is_empty() {
-        let last = operands.pop().unwrap();
+    while let Some(last) = operands.pop() {
         if last.token != Token::Comma {
             operands.push(last);
             break;
@@ -30,50 +33,44 @@ fn encounter_func(f: Function, operands: &mut Vec<Node>) {
     operands.push(make_node(Token::Function(f), Some(args)));
 }
 
-pub fn right_paren(operators: &mut Vec<Token>, operands: &mut Vec<Node>) {
-    while !operators.is_empty() {
-        let top = operators.pop().unwrap();
+pub fn right_paren(operators: &mut TokenList, operands: &mut NodeList) {
+    while let Some(top) = operators.pop() {
         match top {
-            Token::LeftParenthesis => {
-                break;
-            },
+            Token::LeftParenthesis => break,
             Token::Function(f) => encounter_func(f, operands),
-            Token::Operator(op) => {
-                let rhs = operands.pop().expect("missing operand");
-                let lhs = operands.pop().expect("missing operand");
-                operands.push(make_node(
-                    Token::Operator(op),
-                    Some(VecDeque::from(vec![lhs, rhs])),
-                ));
-            },
+            Token::Operator(op) => add_operator(op, operands),
             _ => {},
         }
     }
 }
 
+pub fn add_operator(operator: Operator, operands: &mut NodeList) {
+    let rhs = operands.pop().expect("missing operand");
+    let lhs = operands.pop().expect("missing operand");
+    operands.push(make_node(
+        Token::Operator(operator),
+        Some(vec_deque![lhs, rhs]),
+    ));
+}
+
 pub fn encounter_operator(
-    op1: Operator,
-    operators: &mut Vec<Token>,
-    operands: &mut Vec<Node>,
+    cur_operator: Operator,
+    operators: &mut TokenList,
+    operands: &mut NodeList,
 ) {
-    while !operators.is_empty() {
-        let top = operators.pop().unwrap();
-
+    while let Some(top) = operators.pop() {
         match top {
-            Token::Operator(top_op) => if top_op > op1
-                || (top_op == op1 && !op1.is_right_associative())
-            {
-                let rhs = operands.pop().unwrap();
-                let lhs = operands.pop().unwrap();
-
-                operands.push(make_node(
-                    Token::Operator(top_op),
-                    Some(VecDeque::from(vec![lhs, rhs])),
-                ));
-            }
-            else {
-                operators.push(Token::Operator(top_op));
-                break;
+            Token::Operator(top_operator) => {
+                if top_operator > cur_operator
+                    || (top_operator == cur_operator
+                        && !cur_operator.is_right_associative())
+                {
+                    add_operator(top_operator, operands)
+                }
+                else {
+                    operators.push(Token::Operator(top_operator));
+                    break;
+                }
             },
             Token::Function(f) => encounter_func(f, operands),
             _ => {
@@ -83,13 +80,13 @@ pub fn encounter_operator(
         }
     }
 
-    debug!("Push op to stack: {:?}", op1);
-    operators.push(Token::Operator(op1));
+    debug!("Push op to stack: {:?}", cur_operator);
+    operators.push(Token::Operator(cur_operator));
 }
 
-pub fn parse_tokens(tokens: Vec<Token>) -> Result<Node, String> {
-    let mut operators: Vec<Token> = Vec::new();
-    let mut operands: Vec<Node> = Vec::new();
+pub fn parse_tokens(tokens: TokenList) -> Result<Node, String> {
+    let mut operators: TokenList = Vec::new();
+    let mut operands: NodeList = Vec::new();
 
     for token in tokens {
         debug!("TOKEN: {:?}", token);
@@ -105,12 +102,14 @@ pub fn parse_tokens(tokens: Vec<Token>) -> Result<Node, String> {
                 token: Token::Variable(var),
                 args: None,
             }),
-            Token::RightParenthesis =>
-                right_paren(&mut operators, &mut operands),
+            Token::RightParenthesis => {
+                right_paren(&mut operators, &mut operands)
+            },
             Token::LeftParenthesis => operators.push(token),
 
-            Token::Operator(op1) =>
-                encounter_operator(op1, &mut operators, &mut operands),
+            Token::Operator(op1) => {
+                encounter_operator(op1, &mut operators, &mut operands)
+            },
 
             Token::Function(f) => operators.push(Token::Function(f)),
             Token::Comma => operands.push(make_node(token, None)),
@@ -120,14 +119,11 @@ pub fn parse_tokens(tokens: Vec<Token>) -> Result<Node, String> {
         debug!("----------");
     }
 
-    while !operators.is_empty() {
+    while let Some(operator) = operators.pop() {
+        // ASSUMPTION: two operands per operator
         let rhs = operands.pop().unwrap();
         let lhs = operands.pop().unwrap();
-        let operator = operators.pop().unwrap();
-        operands.push(make_node(
-            operator,
-            Some(VecDeque::from(vec![lhs, rhs])),
-        ));
+        operands.push(make_node(operator, Some(vec_deque![lhs, rhs])));
     }
 
     // TODO: revisit this when the final output is a string/whatever, not just
