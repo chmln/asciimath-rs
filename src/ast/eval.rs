@@ -4,6 +4,7 @@ use std::fmt;
 use tokens::{Operator, Token};
 
 pub type EvaluationResult = Result<f64, String>;
+pub type FunctionArgs = VecDeque<Node>;
 
 pub trait Evaluate {
     /// Evaluates the node/expression with a given variable scope.
@@ -30,11 +31,13 @@ pub fn eval_operator(
         let mut evaled_args = ok_args.iter();
         match operator {
             Operator::Add => Ok(evaled_args.sum()),
-            Operator::Substract =>
-                Ok(evaled_args.nth(0).unwrap() - evaled_args.sum::<f64>()),
+            Operator::Substract => {
+                Ok(evaled_args.nth(0).unwrap() - evaled_args.sum::<f64>())
+            },
             Operator::Multiply => Ok(evaled_args.product()),
-            Operator::Divide =>
-                Ok(evaled_args.nth(0).unwrap() / evaled_args.product::<f64>()),
+            Operator::Divide => {
+                Ok(evaled_args.nth(0).unwrap() / evaled_args.product::<f64>())
+            },
             Operator::Exponentiate => {
                 let base = evaled_args.nth(0).unwrap();
                 Ok(evaled_args
@@ -72,13 +75,14 @@ impl Evaluate for Node {
             },
 
             Token::Number(num) => Ok(num.value),
-            Token::Variable(var) =>
+            Token::Variable(var) => {
                 if let Some(value) = scope.get_var(&var.name) {
                     Ok(value.clone())
                 }
                 else {
                     Err(format!("Variable not found: {}", var.name))
-                },
+                }
+            },
             _ => Err(format!(
                 "token should not be eval'd: {:?}",
                 self.token
