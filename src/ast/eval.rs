@@ -1,4 +1,5 @@
 use ast::{Node, Scope};
+use std::collections::VecDeque;
 use std::fmt;
 use tokens::{Operator, Token};
 
@@ -17,7 +18,7 @@ pub trait Evaluate {
 
 pub fn eval_operator(
     operator: &Operator,
-    args: Vec<Node>,
+    args: VecDeque<Node>,
     scope: &Scope,
 ) -> EvaluationResult {
     println!("ARGS {:?}", args);
@@ -29,22 +30,19 @@ pub fn eval_operator(
         let mut evaled_args = ok_args.iter();
         match operator {
             Operator::Add => Ok(evaled_args.sum()),
-            Operator::Substract => {
-                Ok(evaled_args.nth(0).unwrap() - evaled_args.sum::<f64>())
-            }
+            Operator::Substract =>
+                Ok(evaled_args.nth(0).unwrap() - evaled_args.sum::<f64>()),
             Operator::Multiply => Ok(evaled_args.product()),
-            Operator::Divide => {
-                Ok(evaled_args.nth(0).unwrap() / evaled_args.product::<f64>())
-            }
+            Operator::Divide =>
+                Ok(evaled_args.nth(0).unwrap() / evaled_args.product::<f64>()),
             Operator::Exponentiate => {
                 let base = evaled_args.nth(0).unwrap();
                 Ok(evaled_args
                     .by_ref()
                     .fold(*base, |acc, v| acc.powf(*v)))
-            }
+            },
         }
     }
-    //}
     else {
         Err(format!(
             "failed to evaluate {:?} {:?}",
@@ -55,7 +53,6 @@ pub fn eval_operator(
 
 impl Evaluate for Node {
     fn eval_with(self, scope: &Scope) -> EvaluationResult {
-        //println!("{:?}", self);
         match self.token {
             Token::Operator(operator) => eval_operator(
                 &operator,
@@ -67,21 +64,21 @@ impl Evaluate for Node {
                 let args = ok_args
                     .into_iter()
                     .map(|n| n.eval_with(scope).unwrap());
+
                 match f.name.as_ref() {
                     "max" => Ok(args.fold(0. / 0., f64::max)),
                     _ => unimplemented!(),
                 }
-            }
+            },
 
             Token::Number(num) => Ok(num.value),
-            Token::Variable(var) => {
+            Token::Variable(var) =>
                 if let Some(value) = scope.get_var(&var.name) {
                     Ok(value.clone())
                 }
                 else {
                     Err(format!("Variable not found: {}", var.name))
-                }
-            }
+                },
             _ => Err(format!(
                 "token should not be eval'd: {:?}",
                 self.token

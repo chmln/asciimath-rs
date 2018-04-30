@@ -1,6 +1,7 @@
+use std::collections::VecDeque;
 use tokens::Token;
 
 pub struct Node {
     pub token: Token,
-    pub args: Option<Vec<Node>>,
+    pub args: Option<VecDeque<Node>>,
 }
