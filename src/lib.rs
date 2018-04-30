@@ -15,8 +15,11 @@
 //! ```
 mod ast;
 mod lexer;
+mod logger;
 mod parser;
 mod tokens;
+
+pub const DEBUG: bool = true;
 
 pub use ast::{Evaluate, Node, Scope};
 pub use parser::parse;
