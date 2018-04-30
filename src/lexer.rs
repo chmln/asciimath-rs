@@ -1,7 +1,7 @@
-use tokens::{Function, Number, Operator, Token, Variable};
+use tokens::{Function, Number, Operator, Token, TokenList, Variable};
 
-fn parse_implicit(expr: &str) -> Vec<Token> {
-    let mut tokens: Vec<Token> = Vec::with_capacity(expr.len());
+fn parse_implicit(expr: &str) -> TokenList {
+    let mut tokens: TokenList = Vec::with_capacity(expr.len());
     let mut temp = String::new();
     let mut chars_left = expr.len();
 
@@ -49,12 +49,12 @@ fn get_token(ch: char) -> Option<Token> {
     }
 }
 
-pub fn tokenize(expr: &str) -> Vec<Token> {
+pub fn tokenize(expr: &str) -> TokenList {
     let trimmed = expr.replace(" ", "");
     let mut len = trimmed.len();
     let mut chars = trimmed.chars();
 
-    let mut tokens: Vec<Token> = Vec::with_capacity(len);
+    let mut tokens = Vec::with_capacity(len);
     let mut temp = String::new();
 
     while let Some(c) = chars.next() {
@@ -66,31 +66,30 @@ pub fn tokenize(expr: &str) -> Vec<Token> {
             }
         }
 
-        let token = get_token(c);
-
-        if temp.len() > 0 {
+        if !temp.is_empty() {
             if c == '(' {
-                tokens.push(Token::Function(Function::new(temp.clone(), 1)));
+                tokens.push(Token::Function(Function::new(temp.clone())));
                 temp.clear();
                 len -= 1;
                 continue;
             }
             else {
+                // TODO: maybe implement implicit multiplication
                 tokens.append(&mut parse_implicit(&temp));
             }
 
             temp.clear();
         }
 
-        if let Some(recognized_token) = token {
+        if let Some(recognized_token) = get_token(c) {
             tokens.push(recognized_token);
         }
 
         len -= 1;
     }
 
-    // println!("Tokens: {:?}", tokens);
-    // println!("--------------------");
+    debug!("Tokens: {:?}", tokens);
+    debug!("--------------------");
 
     tokens
 }
