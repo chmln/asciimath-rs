@@ -13,3 +13,6 @@ path = "./src/lib.rs"
 lto = true
 opt-level = 3
 debug = false
+
+[dependencies]
+lazy_static = "1.0.0"

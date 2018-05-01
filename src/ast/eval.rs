@@ -3,6 +3,8 @@ use std::collections::VecDeque;
 use std::fmt;
 use tokens::{Operator, Token};
 
+use functions::FUNCTIONS;
+
 pub type EvaluationResult = Result<f64, String>;
 pub type FunctionArgs = VecDeque<Node>;
 
@@ -21,7 +23,7 @@ pub fn eval_operator(
     operator: &Operator,
     args: VecDeque<Node>,
     scope: &Scope,
-) -> EvaluationResult {
+) -> Result<f64, String> {
     println!("ARGS {:?}", args);
     let ref m_evaled_args: Result<Vec<_>, _> = args.into_iter()
         .map(|node| node.eval_with(scope))
@@ -63,14 +65,18 @@ impl Evaluate for Node {
                 scope,
             ),
             Token::Function(f) => {
-                let ok_args = self.args.unwrap();
-                let args = ok_args
-                    .into_iter()
-                    .map(|n| n.eval_with(scope).unwrap());
-
-                match f.name.as_ref() {
-                    "max" => Ok(args.fold(0. / 0., f64::max)),
-                    _ => unimplemented!(),
+                if let (Some(f), Ok(args)) = (
+                    FUNCTIONS.get(&f.name),
+                    self.args
+                        .unwrap()
+                        .into_iter()
+                        .map(|n| n.eval_with(scope))
+                        .collect::<Result<Vec<f64>, _>>(),
+                ) {
+                    f(&args)
+                }
+                else {
+                    Err(format!("Invalid function: {}", f.name))
                 }
             },
 
