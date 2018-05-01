@@ -43,6 +43,27 @@ fn too_many_brackets() {
 }
 
 #[test]
-fn simple_func() {
+fn simple_func_max() {
     assert_eq!(Ok(2.0), parse("max(1,2)").unwrap().eval());
+}
+
+#[test]
+fn simple_func_max_onearg() {
+    assert_eq!(Ok(1.0), parse("max(1)").unwrap().eval());
+}
+
+#[test]
+fn simple_func_max_multiarg() {
+    assert_eq!(
+        Ok(25.75),
+        parse("max(1,2,3,25.75,10.5,25.7)")
+            .unwrap()
+            .eval()
+    );
+}
+
+#[test]
+#[should_panic]
+fn func_not_enough_args() {
+    assert_eq!(Ok(1.0), parse("max()").unwrap().eval());
 }

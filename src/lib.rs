@@ -14,13 +14,15 @@
 //! assert_eq!(Ok(185193.0), parsed_expr.eval_with(&scope));
 //! ```
 #[macro_use]
+extern crate lazy_static;
+
+#[macro_use]
 mod macros;
 mod ast;
+mod functions;
 mod lexer;
 mod parser;
 mod tokens;
-
-pub const DEBUG: bool = true;
 
 pub use ast::{Evaluate, Node, Scope};
 pub use parser::parse;
