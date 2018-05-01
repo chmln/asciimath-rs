@@ -119,11 +119,9 @@ pub fn parse_tokens(tokens: TokenList) -> Result<Node, String> {
         debug!("----------");
     }
 
-    while let Some(operator) = operators.pop() {
+    while let Some(Token::Operator(operator)) = operators.pop() {
         // ASSUMPTION: two operands per operator
-        let rhs = operands.pop().unwrap();
-        let lhs = operands.pop().unwrap();
-        operands.push(make_node(operator, Some(vec_deque![lhs, rhs])));
+        add_operator(operator, &mut operands)
     }
 
     // TODO: revisit this when the final output is a string/whatever, not just
