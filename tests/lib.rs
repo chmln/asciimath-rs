@@ -79,12 +79,33 @@ fn func_trig() {
     );
 }
 
-// #[test]
-// fn func_basic() {
-//     assert_eq!(Ok(1.0), parse("abs(-1)").unwrap().eval());
-//     assert_eq!(Ok(1.0), parse("abs(1)").unwrap().eval());
-//     assert_eq!(Ok(0.0), parse("abs(-0)").unwrap().eval());
-// }
+#[test]
+fn func_nested() {
+    assert_eq!(Ok(1.0), parse("abs(abs(-1))").unwrap().eval());
+}
+
+#[test]
+fn neg_numbers() {
+    let mut scope = Scope::new();
+    scope.set_var("x", 16);
+    assert_eq!(Ok(-1.0), parse("-1").unwrap().eval());
+    assert_eq!(
+        Ok(15.0),
+        parse("x+-1").unwrap().eval_with(&scope)
+    );
+    assert_eq!(
+        Ok(17.0),
+        parse("x--1").unwrap().eval_with(&scope)
+    );
+    assert_eq!(
+        Ok(17.0),
+        parse("x-(-1)").unwrap().eval_with(&scope)
+    );
+    assert_eq!(
+        Ok(-16.0),
+        parse("x*(-1)").unwrap().eval_with(&scope)
+    );
+}
 
 #[test]
 #[should_panic]

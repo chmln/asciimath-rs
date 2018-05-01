@@ -82,17 +82,59 @@ pub fn tokenize(expr: &str) -> TokenList {
             temp.clear();
         }
 
-        if let Some(recognized_token) = get_token(c) {
-            tokens.push(recognized_token);
+        let t_mut = &mut tokens;
+
+        if let Some(token) = get_token(c) {
+            if token == Token::Operator(Operator::Substract) {
+                match t_mut.last() {
+                    Some(Token::Comma)
+                    | Some(Token::LeftParenthesis)
+                    | Some(Token::Function(_))
+                    | Some(Token::Operator(_))
+                    | None => {
+                        t_mut.push(Token::Number(Number::new(-1)));
+                        t_mut.push(Token::Operator(Operator::Multiply));
+                    },
+                    _ => {
+                        t_mut.push(token);
+                    },
+                }
+            }
+            else {
+                t_mut.push(token);
+            }
         }
 
         len -= 1;
     }
 
-    debug!("Tokens: {:?}", tokens);
+    debug!("Final Tokens: {:?}", tokens);
     debug!("--------------------");
 
     tokens
+}
+
+#[test]
+fn lexer_negative_numbers() {
+    let tokens = tokenize("x+-1");
+    let expected_tokens = vec![
+        Token::Variable(Variable {
+            name: "x".to_string(),
+        }),
+        Token::Operator(Operator::Add),
+        Token::Number(Number::new(-1.0)),
+        Token::Operator(Operator::Multiply),
+        Token::Number(Number::new(1.0)),
+    ];
+    assert_eq!(tokens, expected_tokens)
+}
+
+#[test]
+fn test_parse_impl() {
+    assert_eq!(
+        parse_implicit("1"),
+        vec![Token::Number(Number::new(1.0))]
+    )
 }
 
 #[test]
