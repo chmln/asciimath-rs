@@ -66,7 +66,7 @@ impl Evaluate for Node {
             ),
             Token::Function(f) => {
                 if let (Some(f), Ok(args)) = (
-                    FUNCTIONS.get(&f.name),
+                    FUNCTIONS.get(&f.name.as_ref()),
                     self.args
                         .unwrap()
                         .into_iter()

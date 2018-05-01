@@ -43,17 +43,9 @@ fn too_many_brackets() {
 }
 
 #[test]
-fn simple_func_max() {
+fn func_max() {
     assert_eq!(Ok(2.0), parse("max(1,2)").unwrap().eval());
-}
-
-#[test]
-fn simple_func_max_onearg() {
     assert_eq!(Ok(1.0), parse("max(1)").unwrap().eval());
-}
-
-#[test]
-fn simple_func_max_multiarg() {
     assert_eq!(
         Ok(25.75),
         parse("max(1,2,3,25.75,10.5,25.7)")
@@ -61,6 +53,38 @@ fn simple_func_max_multiarg() {
             .eval()
     );
 }
+
+#[test]
+fn func_min() {
+    assert_eq!(Ok(1.0), parse("min(1,2)").unwrap().eval());
+    assert_eq!(Ok(1.0), parse("min(1)").unwrap().eval());
+    assert_eq!(
+        Ok(1.0),
+        parse("min(1,2,3,25.75,10.5,25.7)")
+            .unwrap()
+            .eval()
+    );
+}
+
+#[test]
+fn func_trig() {
+    assert_eq!(Ok(1.0), parse("sin(90)").unwrap().eval());
+    assert_eq!(Ok(0.5), parse("cos(0)/2").unwrap().eval());
+    assert_eq!(
+        "0.5",
+        format!(
+            "{:.1}",
+            parse("tan(45) / 2").unwrap().eval().unwrap()
+        )
+    );
+}
+
+// #[test]
+// fn func_basic() {
+//     assert_eq!(Ok(1.0), parse("abs(-1)").unwrap().eval());
+//     assert_eq!(Ok(1.0), parse("abs(1)").unwrap().eval());
+//     assert_eq!(Ok(0.0), parse("abs(-0)").unwrap().eval());
+// }
 
 #[test]
 #[should_panic]
