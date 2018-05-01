@@ -16,7 +16,7 @@ Simple, bare-bones, and efficient.
 
 ## Goals
 - [x] functions
-  - [ ] basic (sin, cos, etc)
+  - [x] basic (sin, cos, etc)
   - [ ] user-defined
 - [ ] matrices (maybe)
 - [x] documentation
