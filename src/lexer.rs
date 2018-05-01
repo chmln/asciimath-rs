@@ -6,7 +6,7 @@ fn parse_implicit(expr: &str) -> TokenList {
     let mut chars_left = expr.len();
 
     for ch in expr.chars() {
-        if ch.is_digit(10) {
+        if ch.is_digit(10) || ch == '.' {
             temp.push(ch);
             if chars_left > 1 {
                 chars_left -= 1;
@@ -31,7 +31,6 @@ fn parse_implicit(expr: &str) -> TokenList {
         chars_left -= 1;
     }
 
-    //tokens.pop();
     tokens
 }
 
@@ -58,13 +57,15 @@ pub fn tokenize(expr: &str) -> TokenList {
     let mut temp = String::new();
 
     while let Some(c) = chars.next() {
-        if c.is_alphanumeric() || c == '_' {
+        if c.is_alphanumeric() || c == '_' || c == '.' {
             temp.push(c);
             if len > 1 {
                 len -= 1;
                 continue;
             }
         }
+
+        debug!("TEMP: {}", temp);
 
         if !temp.is_empty() {
             if c == '(' {
@@ -92,4 +93,21 @@ pub fn tokenize(expr: &str) -> TokenList {
     debug!("--------------------");
 
     tokens
+}
+
+#[test]
+fn lexer_floats() {
+    let tokens = tokenize("max(1,3,25.75,10.5)");
+    let expected_tokens = vec![
+        Token::Function(Function::new("max".to_string())),
+        Token::Number(Number::new(1.0)),
+        Token::Comma,
+        Token::Number(Number::new(3.0)),
+        Token::Comma,
+        Token::Number(Number::new(25.75)),
+        Token::Comma,
+        Token::Number(Number::new(10.5)),
+        Token::RightParenthesis,
+    ];
+    assert_eq!(tokens, expected_tokens)
 }
