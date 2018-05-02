@@ -1,5 +1,5 @@
 # Set the base image
-FROM rustlang/rust:nightly-slim
+FROM rustlang/rust:nightly
 # Dockerfile author / maintainer
 MAINTAINER Name <gregory.mkv@gmail.com>
 
