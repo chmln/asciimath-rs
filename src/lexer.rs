@@ -61,39 +61,45 @@ pub fn tokenize(expr: &str) -> TokenList {
     while let Some(c) = chars.next() {
         if c.is_alphanumeric() || c == '_' || c == '.' {
             temp.push(c);
+
             if len > 1 {
                 len -= 1;
                 continue;
             }
         }
 
-        debug!("TEMP: {}", temp);
-
         let cur_token = get_token(c);
+        let t_mut = &mut tokens;
+
+        debug!("CUR: {:?}, TEMP: {}", cur_token, temp);
 
         if !temp.is_empty() {
-            if c == '(' {
-                tokens.push(Token::Function(Function::new(temp.clone())));
+            if cur_token == Some(Token::LeftParenthesis)
+                && temp.parse::<f64>().is_err()
+            {
+                t_mut.push(Token::Function(Function::new(temp.clone())));
                 temp.clear();
                 len -= 1;
                 continue;
             }
             else {
                 // TODO: maybe implement implicit multiplication
-                tokens.append(&mut parse_implicit(&temp));
+                if t_mut.last() == Some(&Token::RightParenthesis) {
+                    t_mut.push(Token::Operator(Operator::Multiply));
+                }
+                t_mut.append(&mut parse_implicit(&temp));
                 if cur_token != Some(Token::LeftParenthesis) {
-                    tokens.pop();
+                    t_mut.pop();
                 }
             }
 
             temp.clear();
         }
 
-        let t_mut = &mut tokens;
-
         if let Some(token) = cur_token {
-            if token == Token::Operator(Operator::Substract) {
-                match t_mut.last() {
+            match token {
+                // Negative numbers
+                Token::Operator(Operator::Substract) => match t_mut.last() {
                     Some(Token::Comma)
                     | Some(Token::LeftParenthesis)
                     | Some(Token::Function(_))
@@ -103,19 +109,21 @@ pub fn tokenize(expr: &str) -> TokenList {
                         t_mut.push(Token::Operator(Operator::Multiply));
                     },
                     _ => {
+                        // just regular subtraction
                         t_mut.push(token);
                     },
-                }
-            }
-            else {
-                t_mut.push(token);
+                },
+                // not subtraction - proceed
+                _ => {
+                    t_mut.push(token);
+                },
             }
         }
 
         len -= 1;
     }
 
-    debug!("Final Tokens: {:?}", tokens);
+    debug!("Tokens: {:?}", tokens);
     debug!("--------------------");
 
     tokens
@@ -151,6 +159,22 @@ fn test_implicit_multiplication() {
                 name: "x".to_string(),
             }),
             Token::Operator(Operator::Exponentiate),
+            Token::Number(Number::new(2)),
+        ]
+    );
+    assert_eq!(
+        tokenize("4(x+3)2"),
+        vec![
+            Token::Number(Number::new(4)),
+            Token::Operator(Operator::Multiply),
+            Token::LeftParenthesis,
+            Token::Variable(Variable {
+                name: "x".to_string(),
+            }),
+            Token::Operator(Operator::Add),
+            Token::Number(Number::new(3)),
+            Token::RightParenthesis,
+            Token::Operator(Operator::Multiply),
             Token::Number(Number::new(2)),
         ]
     );
