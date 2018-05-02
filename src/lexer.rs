@@ -18,6 +18,7 @@ fn parse_implicit(expr: &str) -> TokenList {
             tokens.push(Token::Number(Number::new(
                 temp.parse::<f64>().unwrap(),
             )));
+            tokens.push(Token::Operator(Operator::Multiply));
 
             temp.clear();
         }
@@ -26,6 +27,7 @@ fn parse_implicit(expr: &str) -> TokenList {
             tokens.push(Token::Variable(Variable {
                 name: ch.to_string(),
             }));
+            tokens.push(Token::Operator(Operator::Multiply));
         }
 
         chars_left -= 1;
@@ -67,6 +69,8 @@ pub fn tokenize(expr: &str) -> TokenList {
 
         debug!("TEMP: {}", temp);
 
+        let cur_token = get_token(c);
+
         if !temp.is_empty() {
             if c == '(' {
                 tokens.push(Token::Function(Function::new(temp.clone())));
@@ -77,6 +81,9 @@ pub fn tokenize(expr: &str) -> TokenList {
             else {
                 // TODO: maybe implement implicit multiplication
                 tokens.append(&mut parse_implicit(&temp));
+                if cur_token != Some(Token::LeftParenthesis) {
+                    tokens.pop();
+                }
             }
 
             temp.clear();
@@ -84,7 +91,7 @@ pub fn tokenize(expr: &str) -> TokenList {
 
         let t_mut = &mut tokens;
 
-        if let Some(token) = get_token(c) {
+        if let Some(token) = cur_token {
             if token == Token::Operator(Operator::Substract) {
                 match t_mut.last() {
                     Some(Token::Comma)
@@ -130,10 +137,44 @@ fn lexer_negative_numbers() {
 }
 
 #[test]
-fn test_parse_impl() {
+fn test_implicit_multiplication() {
     assert_eq!(
-        parse_implicit("1"),
+        tokenize("1"),
         vec![Token::Number(Number::new(1.0))]
+    );
+    assert_eq!(
+        tokenize("3x^2"),
+        vec![
+            Token::Number(Number::new(3)),
+            Token::Operator(Operator::Multiply),
+            Token::Variable(Variable {
+                name: "x".to_string(),
+            }),
+            Token::Operator(Operator::Exponentiate),
+            Token::Number(Number::new(2)),
+        ]
+    );
+    assert_eq!(
+        tokenize("x^(2y+3z)"),
+        vec![
+            Token::Variable(Variable {
+                name: "x".to_string(),
+            }),
+            Token::Operator(Operator::Exponentiate),
+            Token::LeftParenthesis,
+            Token::Number(Number::new(2)),
+            Token::Operator(Operator::Multiply),
+            Token::Variable(Variable {
+                name: "y".to_string(),
+            }),
+            Token::Operator(Operator::Add),
+            Token::Number(Number::new(3)),
+            Token::Operator(Operator::Multiply),
+            Token::Variable(Variable {
+                name: "z".to_string(),
+            }),
+            Token::RightParenthesis,
+        ]
     )
 }
 
