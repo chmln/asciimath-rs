@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: rustlang/rust:nightly-slim
+      - image: xd009642/tarpaulin
 
     steps:
       - checkout
