@@ -1,6 +1,6 @@
 use ast::{Node, Scope};
 use std::collections::VecDeque;
-use std::fmt;
+
 use tokens::{Operator, Token};
 
 use functions::FUNCTIONS;
@@ -99,15 +99,5 @@ impl Evaluate for Node {
     fn eval(self) -> EvaluationResult {
         let empty_scope = Scope::new();
         self.eval_with(&empty_scope)
-    }
-}
-
-impl fmt::Debug for Node {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self.token {
-            Token::Variable(ref var) => write!(f, "{}", var.name),
-            Token::Number(ref num) => write!(f, "{}", num.value),
-            _ => write!(f, "({:?} {:?})", self.token, self.args),
-        }
     }
 }
