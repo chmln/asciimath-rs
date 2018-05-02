@@ -8,7 +8,7 @@ jobs:
       - checkout
 
       - restore_cache:
-        key: project-cache
+          key: project-cache
 
       - run:
           name: Nightly Build
