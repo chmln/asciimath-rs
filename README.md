@@ -1,6 +1,7 @@
 
 [![Crates.io](https://img.shields.io/crates/v/asciimath.svg)](https://crates.io/crates/asciimath)
 [![](https://docs.rs/asciimath/badge.svg)](https://docs.rs/asciimath)
+[![CI](https://circleci.com/gh/chmln/asciimath-rs.svg?style=svg)](https://circleci.com/gh/chmln/asciimath-rs)
 
 
 # asciimath-rs
