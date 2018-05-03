@@ -12,7 +12,7 @@ macro_rules! debug {
 macro_rules! vec_deque {
     ( $( $x:expr ),* ) => {
         {
-            let mut temp_vec = VecDeque::new();
+            let mut temp_vec = $crate::std::collections::VecDeque::new();
             $(
                 temp_vec.push_back($x);
             )*

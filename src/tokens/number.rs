@@ -1,12 +1,14 @@
+use ast::NumericLiteral;
+
 #[derive(Debug, PartialEq)]
 pub struct Number {
-    pub value: f64,
+    pub value: NumericLiteral,
 }
 
 impl Number {
     pub fn new<T>(value: T) -> Number
     where
-        T: Into<f64>,
+        T: Into<NumericLiteral>,
     {
         Number {
             value: value.into(),

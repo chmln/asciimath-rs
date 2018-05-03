@@ -1,7 +1,6 @@
 use lexer::tokenize;
-use std::collections::VecDeque;
 
-use ast::{FunctionArgs, Node};
+use ast::{Args, Node};
 use tokens::{Function, Operator, Token, TokenList};
 
 type NodeList = Vec<Node>;
@@ -10,12 +9,12 @@ pub fn parse(expr: &str) -> Result<Node, String> {
     parse_tokens(tokenize(expr))
 }
 
-fn make_node(token: Token, args: Option<VecDeque<Node>>) -> Node {
+fn make_node(token: Token, args: Option<Args>) -> Node {
     Node { token, args }
 }
 
 fn encounter_func(f: Function, operands: &mut NodeList) {
-    let mut args: FunctionArgs = VecDeque::with_capacity(2);
+    let mut args = Args::with_capacity(2);
 
     // ASSUMPTION: at least one argument per function
     args.push_front(operands.pop().unwrap());

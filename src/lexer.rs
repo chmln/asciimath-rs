@@ -1,3 +1,4 @@
+use ast::NumericLiteral;
 use tokens::{Function, Number, Operator, Token, TokenList, Variable};
 
 fn parse_implicit(expr: &str) -> TokenList {
@@ -16,7 +17,7 @@ fn parse_implicit(expr: &str) -> TokenList {
 
         if !temp.is_empty() {
             tokens.push(Token::Number(Number::new(
-                temp.parse::<f64>().unwrap(),
+                temp.parse::<NumericLiteral>().unwrap(),
             )));
             tokens.push(Token::Operator(Operator::Multiply));
 
@@ -75,7 +76,7 @@ pub fn tokenize(expr: &str) -> TokenList {
 
         if !temp.is_empty() {
             if cur_token == Some(Token::LeftParenthesis)
-                && temp.parse::<f64>().is_err()
+                && temp.parse::<NumericLiteral>().is_err()
             {
                 t_mut.push(Token::Function(Function::new(temp.clone())));
                 temp.clear();
@@ -83,7 +84,6 @@ pub fn tokenize(expr: &str) -> TokenList {
                 continue;
             }
             else {
-                // TODO: maybe implement implicit multiplication
                 if t_mut.last() == Some(&Token::RightParenthesis) {
                     t_mut.push(Token::Operator(Operator::Multiply));
                 }

@@ -1,9 +1,11 @@
 use std::{collections::VecDeque, fmt};
 use tokens::Token;
 
+pub type Args = VecDeque<Node>;
+
 pub struct Node {
     pub token: Token,
-    pub args: Option<VecDeque<Node>>,
+    pub args: Option<Args>,
 }
 
 impl fmt::Debug for Node {

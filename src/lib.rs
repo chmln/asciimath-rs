@@ -13,6 +13,7 @@
 //!
 //! assert_eq!(Ok(185193.0), parsed_expr.eval_with(&scope));
 //! ```
+
 #[macro_use]
 extern crate lazy_static;
 
@@ -25,4 +26,5 @@ mod parser;
 mod tokens;
 
 pub use ast::{Evaluate, Node, Scope};
+pub use functions::CustomFunc;
 pub use parser::parse;

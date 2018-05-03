@@ -1,3 +1,3 @@
 mod index;
 
-pub use self::index::FUNCTIONS;
+pub use self::index::{CustomFunc, Func, FUNCTIONS};
