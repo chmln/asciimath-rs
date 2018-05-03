@@ -10,20 +10,22 @@ Parses mathematical (infix) expressions into an Abstract Syntax Tree using  Dijk
 
 Simple, bare-bones, and efficient.
 
-## Features
-- evaluation
-- support for variables 
-  - with artibrary number of characters (e.g. abcde)
-
-## Goals
+## Roadmap
+- [x] evaluation
+- [x] support for variables 
+  - [ ] support for word-variables (right now only single-letter variables are supported)
 - [x] functions
   - [x] basic (sin, cos, etc)
   - [ ] user-defined
+- [ ] error handling and propogation
 - [ ] matrices (maybe)
 - [x] documentation
 
+## Goals
+
+
 ## Non-goals
 
-- non-mathematical expressions
+- non-mathematical expressions, at least for now
 - php-esque abominations like `a=func(x) && b=func(y) && 'what'`
 
