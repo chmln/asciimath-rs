@@ -1,12 +1,6 @@
-#![feature(optin_builtin_traits)]
-
 use ast::NumericLiteral;
 use functions::CustomFunc;
 use std::{collections::HashMap, convert::Into};
-
-trait Disjoint<I: Sized + 'static> {
-    type I;
-}
 
 pub enum Variable {
     Number(NumericLiteral),
@@ -36,21 +30,20 @@ impl Scope {
         }
     }
 
+    fn set(&mut self, var_name: &str, value: Variable) {
+        self.variables
+            .insert(var_name.to_string(), value);
+    }
+
     pub fn set_var<T>(&mut self, var_name: &str, value: T)
     where
         T: Into<NumericLiteral>,
     {
-        self.variables.insert(
-            var_name.to_string(),
-            Variable::Number(value.into()),
-        );
+        self.set(var_name, Variable::Number(value.into()));
     }
 
     pub fn set_fn(&mut self, func_name: &str, function: CustomFunc) {
-        self.variables.insert(
-            func_name.to_string(),
-            Variable::Function(function),
-        );
+        self.set(func_name, Variable::Function(function));
     }
 
     pub fn get_var(&self, var_name: &str) -> Option<&Variable> {
