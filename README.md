@@ -10,22 +10,43 @@ Parses mathematical (infix) expressions into an Abstract Syntax Tree using  Dijk
 
 Simple, bare-bones, and efficient.
 
+## Features
+
+- support for variables 
+- evaluation
+  - compile the expression just once, evaluate with a different set of variables
+- implicit multiplication
+
+
 ## Roadmap
-- [x] evaluation
-- [x] support for variables 
-  - [ ] support for word-variables (right now only single-letter variables are supported)
-- [x] functions
+
+- [ ] Error handling and propogation 
+- [ ] Embedded constants like `pi` and `e`
+- [x] Functions
   - [x] basic (sin, cos, etc)
   - [ ] user-defined
-- [ ] error handling and propogation
-- [ ] matrices (maybe)
-- [x] documentation
+- [ ] Support for word-variables (right now only single-letter variables are supported)
+- [ ] Thorough documentation
+  - [x] basic use
+  - [ ] available functions
 
-## Goals
+## Future Goals
 
+The items below will be considered after ABI stabilization:
+
+- non-mathematical expressions, like strings
+- Ability to simplify expressions
+- Derivatives, incl. second-order and third-order
+- Integration
+- Partial differentiation
+- Vector calculus
+- Matrices and vector spaces
 
 ## Non-goals
 
-- non-mathematical expressions, at least for now
 - php-esque abominations like `a=func(x) && b=func(y) && 'what'`
+
+## Motivation
+
+Created for the University of Toronto Mathematical Assessment Tool, to facilitate generation of randomized tests and quizzes, which are then automatically graded. 
 
