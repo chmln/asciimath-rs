@@ -34,7 +34,8 @@ Simple, bare-bones, and efficient.
 
 The items below will be considered after ABI stabilization:
 
-- non-mathematical expressions, like strings
+- Non-mathematical expressions, like strings
+- More operators (e.g. ternary ? : )
 - Ability to simplify expressions
 - Derivatives, incl. second-order and third-order
 - Integration
