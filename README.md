@@ -24,7 +24,7 @@ Simple, bare-bones, and efficient.
 - [ ] Embedded constants like `pi` and `e`
 - [x] Functions
   - [x] basic (sin, cos, etc)
-  - [ ] user-defined
+  - [x] user-defined
 - [ ] Support for word-variables (right now only single-letter variables are supported)
 - [ ] Thorough documentation
   - [x] basic use
