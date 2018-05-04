@@ -12,15 +12,15 @@ Simple, bare-bones, and efficient.
 
 ## Features
 
-- support for variables 
 - evaluation
   - compile the expression just once, evaluate with a different set of variables
+- support for variables and custom functions
 - implicit multiplication
 
 
 ## Roadmap
 
-- [ ] Error handling and propogation 
+- [x] Error handling and propogation 
 - [ ] Embedded constants like `pi` and `e`
 - [x] Functions
   - [x] basic (sin, cos, etc)
