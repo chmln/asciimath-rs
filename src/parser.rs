@@ -137,7 +137,6 @@ pub fn parse_tokens(tokens: TokenList) -> Result<Node, String> {
     }
 
     while let Some(Token::Operator(operator)) = operators.pop() {
-        // ASSUMPTION: two operands per operator
         add_operator(operator, &mut operands)?
     }
 
