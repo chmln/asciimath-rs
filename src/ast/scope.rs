@@ -1,20 +1,27 @@
 use ast::NumericLiteral;
-use functions::CustomFunc;
+use functions::CustomFn;
 use std::{collections::HashMap, convert::Into};
 
 pub enum Variable {
     Number(NumericLiteral),
-    Function(CustomFunc),
+    Function(CustomFn),
 }
 
-impl From<NumericLiteral> for Variable {
-    fn from(val: NumericLiteral) -> Variable {
-        Variable::Number(val)
+// Allows users to just pass in integers, not whatever type is used internally
+macro_rules! num_into_var {
+    ($($ty:ty)*) => {
+        $(impl From<$ty> for Variable {
+            fn from(val: $ty) -> Variable {
+                Variable::Number(val as NumericLiteral)
+            }
+        })*
     }
 }
 
-impl From<CustomFunc> for Variable {
-    fn from(val: CustomFunc) -> Variable {
+num_into_var!(i8 i16 i32 i64 u8 u16 u32 u64 isize usize f32);
+
+impl From<CustomFn> for Variable {
+    fn from(val: CustomFn) -> Variable {
         Variable::Function(val)
     }
 }
@@ -30,20 +37,9 @@ impl Scope {
         }
     }
 
-    fn set(&mut self, var_name: &str, value: Variable) {
+    pub fn set_var<T: Into<Variable>>(&mut self, var_name: &str, value: T) {
         self.variables
-            .insert(var_name.to_string(), value);
-    }
-
-    pub fn set_var<T>(&mut self, var_name: &str, value: T)
-    where
-        T: Into<NumericLiteral>,
-    {
-        self.set(var_name, Variable::Number(value.into()));
-    }
-
-    pub fn set_fn(&mut self, func_name: &str, function: CustomFunc) {
-        self.set(func_name, Variable::Function(function));
+            .insert(var_name.to_string(), value.into());
     }
 
     pub fn get_var(&self, var_name: &str) -> Option<&Variable> {

@@ -1,5 +1,5 @@
 extern crate asciimath;
-use self::asciimath::{parse, CustomFunc, Evaluate, Scope};
+use self::asciimath::{parse, CustomFn, Evaluate, Scope};
 
 #[test]
 fn single_item() {
@@ -33,9 +33,9 @@ fn simple_vars() {
 #[test]
 fn user_defined_functions() {
     let mut scope = Scope::new();
-    let my_sum_func: CustomFunc = |args| Ok(args.iter().sum::<f64>());
+    let my_sum_func: CustomFn = |args| Ok(args.iter().sum::<f64>());
 
-    scope.set_fn("sum", my_sum_func);
+    scope.set_var("sum", my_sum_func);
     assert_eq!(
         Ok(6.0),
         parse("sum(1,2,3)").unwrap().eval_with(&scope)

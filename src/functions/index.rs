@@ -1,9 +1,9 @@
 use ast::{EvaluationResult, NumericLiteral};
 use std::collections::HashMap;
 
-type Args = Vec<NumericLiteral>;
+pub type Args = Vec<NumericLiteral>;
 pub type Func = fn(&Args) -> EvaluationResult;
-pub type CustomFunc = Func;
+pub type CustomFn = Func;
 
 lazy_static! {
     pub static ref FUNCTIONS: HashMap<&'static str, Func> = {

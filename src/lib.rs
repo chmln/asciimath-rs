@@ -26,5 +26,5 @@ mod parser;
 mod tokens;
 
 pub use ast::{Evaluate, Node, Scope};
-pub use functions::CustomFunc;
+pub use functions::CustomFn;
 pub use parser::parse;
