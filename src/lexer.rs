@@ -1,7 +1,7 @@
 use ast::NumericLiteral;
 use tokens::{Function, Number, Operator, Token, TokenList, Variable};
 
-fn parse_implicit(expr: &str) -> TokenList {
+fn parse_implicit(expr: &str) -> Result<TokenList, String> {
     let mut tokens: TokenList = Vec::with_capacity(expr.len());
     let mut temp = String::new();
     let mut chars_left = expr.len();
@@ -17,7 +17,8 @@ fn parse_implicit(expr: &str) -> TokenList {
 
         if !temp.is_empty() {
             tokens.push(Token::Number(Number::new(
-                temp.parse::<NumericLiteral>().unwrap(),
+                temp.parse::<NumericLiteral>()
+                    .map_err(|e| format!("Invalid value: {}", temp))?,
             )));
             tokens.push(Token::Operator(Operator::Multiply));
 
@@ -34,7 +35,7 @@ fn parse_implicit(expr: &str) -> TokenList {
         chars_left -= 1;
     }
 
-    tokens
+    Ok(tokens)
 }
 
 fn get_token(ch: char) -> Option<Token> {
@@ -51,7 +52,7 @@ fn get_token(ch: char) -> Option<Token> {
     }
 }
 
-pub fn tokenize(expr: &str) -> TokenList {
+pub fn tokenize(expr: &str) -> Result<TokenList, String> {
     let trimmed = expr.replace(" ", "");
     let mut len = trimmed.len();
     let mut chars = trimmed.chars();
@@ -87,7 +88,7 @@ pub fn tokenize(expr: &str) -> TokenList {
                 if t_mut.last() == Some(&Token::RightParenthesis) {
                     t_mut.push(Token::Operator(Operator::Multiply));
                 }
-                t_mut.append(&mut parse_implicit(&temp));
+                t_mut.append(&mut parse_implicit(&temp)?);
                 if cur_token != Some(Token::LeftParenthesis) {
                     t_mut.pop();
                 }
@@ -126,12 +127,12 @@ pub fn tokenize(expr: &str) -> TokenList {
     debug!("Tokens: {:?}", tokens);
     debug!("--------------------");
 
-    tokens
+    Ok(tokens)
 }
 
 #[test]
 fn lexer_negative_numbers() {
-    let tokens = tokenize("x+-1");
+    let tokens = tokenize("x+-1").unwrap();
     let expected_tokens = vec![
         Token::Variable(Variable {
             name: "x".to_string(),
@@ -147,11 +148,11 @@ fn lexer_negative_numbers() {
 #[test]
 fn test_implicit_multiplication() {
     assert_eq!(
-        tokenize("1"),
+        tokenize("1").unwrap(),
         vec![Token::Number(Number::new(1.0))]
     );
     assert_eq!(
-        tokenize("3x^2"),
+        tokenize("3x^2").unwrap(),
         vec![
             Token::Number(Number::new(3)),
             Token::Operator(Operator::Multiply),
@@ -163,7 +164,7 @@ fn test_implicit_multiplication() {
         ]
     );
     assert_eq!(
-        tokenize("4(x+3)2"),
+        tokenize("4(x+3)2").unwrap(),
         vec![
             Token::Number(Number::new(4)),
             Token::Operator(Operator::Multiply),
@@ -179,7 +180,7 @@ fn test_implicit_multiplication() {
         ]
     );
     assert_eq!(
-        tokenize("x^(2y+3z)"),
+        tokenize("x^(2y+3z)").unwrap(),
         vec![
             Token::Variable(Variable {
                 name: "x".to_string(),
@@ -204,7 +205,7 @@ fn test_implicit_multiplication() {
 
 #[test]
 fn lexer_floats() {
-    let tokens = tokenize("max(1,3,25.75,10.5)");
+    let tokens = tokenize("max(1,3,25.75,10.5)").unwrap();
     let expected_tokens = vec![
         Token::Function(Function::new("max".to_string())),
         Token::Number(Number::new(1.0)),

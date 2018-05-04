@@ -6,7 +6,7 @@ use tokens::{Function, Operator, Token, TokenList};
 type NodeList = Vec<Node>;
 
 pub fn parse(expr: &str) -> Result<Node, String> {
-    parse_tokens(tokenize(expr))
+    parse_tokens(tokenize(expr)?)
 }
 
 fn make_node(token: Token, args: Option<Args>) -> Node {
