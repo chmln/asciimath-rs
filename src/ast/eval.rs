@@ -30,12 +30,22 @@ pub fn eval_operator(
 
     match operator {
         Operator::Add => Ok(evaled_args.sum()),
-        Operator::Substract => Ok(evaled_args.nth(0).unwrap() - evaled_args.sum::<NumericLiteral>()),
+        Operator::Substract => Ok(evaled_args.nth(0).ok_or(format!(
+            "Not enough arguments for operator {:?}",
+            operator
+        ))?
+            - evaled_args.sum::<NumericLiteral>()),
         Operator::Multiply => Ok(evaled_args.product()),
-        Operator::Divide => Ok(evaled_args.nth(0).unwrap()
+        Operator::Divide => Ok(evaled_args.nth(0).ok_or(format!(
+            "Not enough arguments for operator {:?}",
+            operator
+        ))?
             / evaled_args.product::<NumericLiteral>()),
         Operator::Exponentiate => {
-            let base = evaled_args.nth(0).unwrap();
+            let base = evaled_args.nth(0).ok_or(format!(
+                "Not enough arguments for operator {:?}",
+                operator
+            ))?;
             Ok(evaled_args.fold(*base, |acc, v| acc.powf(*v)))
         },
     }

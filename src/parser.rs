@@ -13,11 +13,14 @@ fn make_node(token: Token, args: Option<Args>) -> Node {
     Node { token, args }
 }
 
-fn encounter_func(f: Function, operands: &mut NodeList) {
+fn encounter_func(f: Function, operands: &mut NodeList) -> Result<(), String> {
     let mut args = Args::with_capacity(2);
 
     // ASSUMPTION: at least one argument per function
-    args.push_front(operands.pop().unwrap());
+    args.push_front(operands.pop().ok_or(format!(
+        "Not enough arguments for function: {}",
+        f.name
+    ))?);
 
     while let Some(last) = operands.pop() {
         if last.token != Token::Comma {
@@ -25,38 +28,52 @@ fn encounter_func(f: Function, operands: &mut NodeList) {
             break;
         }
         else {
-            args.push_front(operands.pop().unwrap());
+            args.push_front(operands
+                .pop()
+                .ok_or(format!("Syntax error in function {}", f.name))?);
         }
     }
 
     operands.push(make_node(Token::Function(f), Some(args)));
+    Ok(())
 }
 
-pub fn right_paren(operators: &mut TokenList, operands: &mut NodeList) {
+pub fn right_paren(
+    operators: &mut TokenList,
+    operands: &mut NodeList,
+) -> Result<(), String> {
     while let Some(top) = operators.pop() {
         match top {
             Token::LeftParenthesis => break,
-            Token::Function(f) => encounter_func(f, operands),
-            Token::Operator(op) => add_operator(op, operands),
+            Token::Function(f) => encounter_func(f, operands)?,
+            Token::Operator(op) => add_operator(op, operands)?,
             _ => {},
         }
     }
+    Ok(())
 }
 
-pub fn add_operator(operator: Operator, operands: &mut NodeList) {
-    let rhs = operands.pop().expect("missing operand");
-    let lhs = operands.pop().expect("missing operand");
-    operands.push(make_node(
+pub fn add_operator(
+    operator: Operator,
+    operands: &mut NodeList,
+) -> Result<(), String> {
+    let rhs = operands
+        .pop()
+        .ok_or(format!("Not enough operands for operator"))?;
+    let lhs = operands
+        .pop()
+        .ok_or(format!("Not enough operands for operator"))?;
+    Ok(operands.push(make_node(
         Token::Operator(operator),
         Some(vec_deque![lhs, rhs]),
-    ));
+    )))
 }
 
 pub fn encounter_operator(
     cur_operator: Operator,
     operators: &mut TokenList,
     operands: &mut NodeList,
-) {
+) -> Result<(), String> {
     while let Some(top) = operators.pop() {
         match top {
             Token::Operator(top_operator) => {
@@ -64,14 +81,14 @@ pub fn encounter_operator(
                     || (top_operator == cur_operator
                         && !cur_operator.is_right_associative())
                 {
-                    add_operator(top_operator, operands)
+                    add_operator(top_operator, operands)?
                 }
                 else {
                     operators.push(Token::Operator(top_operator));
                     break;
                 }
             },
-            Token::Function(f) => encounter_func(f, operands),
+            Token::Function(f) => encounter_func(f, operands)?,
             _ => {
                 operators.push(top);
                 break;
@@ -81,6 +98,7 @@ pub fn encounter_operator(
 
     debug!("Push op to stack: {:?}", cur_operator);
     operators.push(Token::Operator(cur_operator));
+    Ok(())
 }
 
 pub fn parse_tokens(tokens: TokenList) -> Result<Node, String> {
@@ -102,12 +120,12 @@ pub fn parse_tokens(tokens: TokenList) -> Result<Node, String> {
                 args: None,
             }),
             Token::RightParenthesis => {
-                right_paren(&mut operators, &mut operands)
+                right_paren(&mut operators, &mut operands)?;
             },
             Token::LeftParenthesis => operators.push(token),
 
             Token::Operator(op1) => {
-                encounter_operator(op1, &mut operators, &mut operands)
+                encounter_operator(op1, &mut operators, &mut operands)?;
             },
 
             Token::Function(f) => operators.push(Token::Function(f)),
@@ -120,10 +138,12 @@ pub fn parse_tokens(tokens: TokenList) -> Result<Node, String> {
 
     while let Some(Token::Operator(operator)) = operators.pop() {
         // ASSUMPTION: two operands per operator
-        add_operator(operator, &mut operands)
+        add_operator(operator, &mut operands)?
     }
 
     // TODO: revisit this when the final output is a string/whatever, not just
     // a float
-    Ok(operands.pop().unwrap())
+    operands
+        .pop()
+        .ok_or("Empty expression".to_string())
 }

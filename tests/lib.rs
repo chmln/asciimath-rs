@@ -28,6 +28,13 @@ fn simple_vars() {
         Ok(240.0),
         parse("x^2-16").unwrap().eval_with(&scope)
     );
+
+    assert!(
+        parse("y^2-16")
+            .unwrap()
+            .eval_with(&scope)
+            .is_err()
+    );
 }
 
 #[test]
@@ -120,7 +127,11 @@ fn neg_numbers() {
 }
 
 #[test]
-#[should_panic]
 fn func_not_enough_args() {
-    assert_eq!(Ok(1.0), parse("max()").unwrap().eval());
+    assert!(parse("max()").is_err());
+}
+
+#[test]
+fn paren_mismatch() {
+    assert!(parse("x+())").is_err());
 }
