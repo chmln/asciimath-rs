@@ -5,8 +5,6 @@
 //! `eval` is perfect for cases when you just need to evaluate an expression
 //! once, with a given a set of variables.
 //!
-//! For repeated evaluation of an expression, see the next example.
-//!
 //! ```
 //! #[macro_use] extern crate asciimath;
 //! use asciimath::{eval,Evaluate};
@@ -17,11 +15,15 @@
 //! }));
 //! ```
 //!
+//! For repeated evaluation of an expression, see the next example.
+//!
 //! # Compiling Expressions
 //!
 //! The example below demonstrates parsing and evaluation of an expression
-//! with user-defined variables. The compiled expression is immutable and can
-//! be evaluated with many scopes.
+//! with two sets of variables.
+//!
+//! The Scope is passed to the compiler only for disambiguation in cases of
+//! implicit multiplication and function calls.
 //!
 //! ```
 //! #[macro_use] extern crate asciimath;
