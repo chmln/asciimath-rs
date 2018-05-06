@@ -1,7 +1,8 @@
 use ast::{resolve_fn, NumericLiteral, Scope};
+use error::Error;
 use tokens::{Function, Number, Operator, Token, TokenList, Variable};
 
-fn parse_implicit(expr: &str) -> Result<TokenList, String> {
+fn parse_implicit(expr: &str) -> Result<TokenList, Error> {
     let mut tokens: TokenList = Vec::with_capacity(expr.len() * 2);
     let mut temp = String::new();
     let mut chars_left = expr.len();
@@ -18,7 +19,7 @@ fn parse_implicit(expr: &str) -> Result<TokenList, String> {
         if !temp.is_empty() {
             tokens.push(Token::Number(Number::new(
                 temp.parse::<NumericLiteral>()
-                    .map_err(|_e| format!("Invalid value: {}", temp))?,
+                    .map_err(|_e| Error::InvalidToken(temp.clone()))?,
             )));
             tokens.push(Token::Operator(Operator::Multiply));
 
@@ -52,7 +53,7 @@ fn get_token(ch: char) -> Option<Token> {
     }
 }
 
-pub fn tokenize<'a>(expr: &str, scope: &'a Scope) -> Result<TokenList, String> {
+pub fn tokenize<'a>(expr: &str, scope: &'a Scope) -> Result<TokenList, Error> {
     let trimmed = expr.replace(" ", "");
     let mut len = trimmed.len();
     let mut chars = trimmed.chars();

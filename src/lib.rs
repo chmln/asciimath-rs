@@ -7,7 +7,7 @@
 //!
 //! ```
 //! #[macro_use] extern crate asciimath;
-//! use asciimath::{eval,Evaluate};
+//! use asciimath::eval;
 //!
 //! assert_eq!(Ok(185193.0), eval("(x + y * 4) ^ 3", &scope!{
 //!    "x" => 8,
@@ -22,7 +22,7 @@
 //! The example below demonstrates parsing and evaluation of an expression
 //! with two sets of variables.
 //!
-//! The Scope is passed to the compiler only for disambiguation in cases of
+//! The Scope is passed to the compiler only disambiguation in cases of
 //! implicit multiplication and function calls.
 //!
 //! ```
@@ -52,8 +52,8 @@
 //! let my_sum: CustomFn = |args| Ok(args.iter().sum());
 //!
 //! let scope = scope!{
-//! "x" => 1,
-//! "my_sum" => my_sum,
+//!   "x" => 1,
+//!   "my_sum" => my_sum,
 //! };
 //!
 //! assert_eq!(Ok(6.0), eval("my_sum(x, 2, 3)",&scope));
@@ -67,11 +67,13 @@ extern crate lazy_static;
 #[macro_use]
 mod macros;
 mod ast;
+mod error;
 mod functions;
 mod lexer;
 mod parser;
 mod tokens;
 
 pub use ast::{Evaluate, Scope};
+pub use error::Error;
 pub use functions::CustomFn;
 pub use parser::{compile, eval};

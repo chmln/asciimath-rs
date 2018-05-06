@@ -1,9 +1,11 @@
 use ast::{Args, Node, Root, Scope, Variable};
+use error::Error;
 use functions::{Func, FUNCTIONS};
 use tokens::{Operator, Token};
 
 pub type NumericLiteral = f64;
-pub type EvaluationResult = Result<NumericLiteral, String>;
+
+pub type EvaluationResult = Result<NumericLiteral, Error>;
 
 pub trait Evaluate {
     /// Evaluates the node/expression with a given variable scope.
@@ -22,44 +24,44 @@ pub fn eval_operator(
     scope: &Scope,
 ) -> EvaluationResult {
     let args = args.as_ref()
-        .ok_or("operator must have args")?
+        .ok_or(Error::MissingOperands(format!(
+            "{:?}",
+            operator
+        )))?
         .into_iter()
         .map(|node| node.eval_with(scope))
-        .collect::<Result<Vec<NumericLiteral>, String>>()?;
+        .collect::<Result<Vec<NumericLiteral>, Error>>()?;
 
     let ref mut evaled_args = args.iter();
 
     match operator {
         Operator::Add => Ok(evaled_args.sum()),
-        Operator::Substract => Ok(evaled_args.nth(0).ok_or(format!(
-            "Not enough arguments for operator {:?}",
-            operator
-        ))?
+        Operator::Substract => Ok(evaled_args.nth(0).ok_or(
+            Error::MissingOperands(format!("{:?}", operator)),
+        )?
             - evaled_args.sum::<NumericLiteral>()),
         Operator::Multiply => Ok(evaled_args.product()),
-        Operator::Divide => Ok(evaled_args.nth(0).ok_or(format!(
-            "Not enough arguments for operator {:?}",
-            operator
-        ))?
+        Operator::Divide => Ok(evaled_args.nth(0).ok_or(
+            Error::MissingOperands(format!("{:?}", operator)),
+        )?
             / evaled_args.product::<NumericLiteral>()),
         Operator::Exponentiate => {
-            let base = evaled_args.nth(0).ok_or(format!(
-                "Not enough arguments for operator {:?}",
-                operator
-            ))?;
+            let base = evaled_args
+                .nth(0)
+                .ok_or(Error::MissingOperands(format!(
+                    "{:?}",
+                    operator
+                )))?;
             Ok(evaled_args.fold(*base, |acc, v| acc.powf(*v)))
         },
     }
 }
 
-pub fn resolve_fn<'a>(
-    name: &str,
-    scope: &'a Scope,
-) -> Result<&'a Func, String> {
+pub fn resolve_fn<'a>(name: &str, scope: &'a Scope) -> Result<&'a Func, Error> {
     FUNCTIONS.get(name).map_or_else(
         || match scope.get_var(name) {
             Some(Variable::Function(f)) => Ok(f),
-            _ => Err(format!("Function \"{}\" is not defined", name)),
+            _ => Err(Error::UnknownFunction(name.to_string())),
         },
         |f| Ok(f),
     )
@@ -68,13 +70,14 @@ pub fn resolve_fn<'a>(
 fn eval_args(
     args: &Option<Args>,
     scope: &Scope,
-) -> Result<Vec<NumericLiteral>, String> {
+    fn_name: String,
+) -> Result<Vec<NumericLiteral>, Error> {
     if let Some(args) = args {
         return args.into_iter()
             .map(|n| n.eval_with(scope))
             .collect::<Result<Vec<NumericLiteral>, _>>();
     }
-    Err("Not enough arguments given".to_string())
+    Err(Error::NotEnoughFunctionParams(fn_name))
 }
 
 impl Evaluate for Node {
@@ -84,7 +87,7 @@ impl Evaluate for Node {
                 eval_operator(&operator, &self.args, scope)
             },
             Token::Function(ref f) => resolve_fn(&f.name.as_ref(), scope)?(
-                &eval_args(&self.args, scope)?,
+                &eval_args(&self.args, scope, f.name.clone())?,
             ),
 
             Token::Number(ref num) => Ok(num.value),
@@ -94,12 +97,12 @@ impl Evaluate for Node {
                     return Ok(value.clone());
                 }
 
-                Err(format!("Variable not found: {}", var.name))
+                Err(Error::UnknownVariable(var.name.clone()))
             },
-            _ => Err(format!(
-                "token should not be eval'd: {:?}",
+            _ => Err(Error::CannotEvaluateToken(format!(
+                "{:?}",
                 self.token
-            )),
+            ))),
         }
     }
 

@@ -1,5 +1,5 @@
 extern crate asciimath;
-use self::asciimath::{compile, eval, CustomFn, Evaluate, Scope};
+use self::asciimath::{compile, eval, CustomFn, Error, Evaluate, Scope};
 
 #[test]
 fn single_item() {
@@ -24,7 +24,10 @@ fn simple_vars() {
 
     assert_eq!(Ok(240.0), eval("x^2-16", &scope));
 
-    assert!(eval("y^2-16", &scope).is_err());
+    assert_eq!(
+        Err(Error::UnknownVariable("y".to_string())),
+        eval("y^2-16", &scope)
+    );
 }
 
 #[test]
@@ -97,7 +100,12 @@ fn neg_numbers() {
 
 #[test]
 fn func_not_enough_args() {
-    assert!(eval("max()", &Scope::new()).is_err());
+    assert_eq!(
+        Err(Error::NotEnoughFunctionParams(
+            "max".to_string()
+        )),
+        eval("max()", &Scope::new())
+    );
 }
 
 #[test]

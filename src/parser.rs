@@ -1,6 +1,7 @@
 use lexer::tokenize;
 
 use ast::{Args, Evaluate, EvaluationResult, Node, Root, Scope};
+use error::Error;
 use tokens::{Function, Operator, Token, TokenList};
 
 type NodeList = Vec<Node>;
@@ -9,10 +10,7 @@ pub fn eval<'a>(expr: &'a str, scope: &'a Scope) -> EvaluationResult {
     parse_tokens(tokenize(expr, scope)?, scope)?.eval()
 }
 
-pub fn compile<'a>(
-    expr: &'a str,
-    scope: &'a Scope,
-) -> Result<Root<'a>, String> {
+pub fn compile<'a>(expr: &'a str, scope: &'a Scope) -> Result<Root<'a>, Error> {
     parse_tokens(tokenize(expr, scope)?, scope)
 }
 
@@ -20,14 +18,13 @@ fn make_node(token: Token, args: Option<Args>) -> Node {
     Node { token, args }
 }
 
-fn encounter_func(f: Function, operands: &mut NodeList) -> Result<(), String> {
+fn encounter_func(f: Function, operands: &mut NodeList) -> Result<(), Error> {
     let mut args = Args::with_capacity(2);
 
     // ASSUMPTION: at least one argument per function
-    args.push_front(operands.pop().ok_or(format!(
-        "Not enough arguments for function: {}",
-        f.name
-    ))?);
+    args.push_front(operands
+        .pop()
+        .ok_or(Error::NotEnoughFunctionParams(f.name.clone()))?);
 
     while let Some(last) = operands.pop() {
         if last.token != Token::Comma {
@@ -37,7 +34,7 @@ fn encounter_func(f: Function, operands: &mut NodeList) -> Result<(), String> {
         else {
             args.push_front(operands
                 .pop()
-                .ok_or(format!("Syntax error in function {}", f.name))?);
+                .ok_or(Error::FunctionSyntaxError(f.name.clone()))?);
         }
     }
 
@@ -48,7 +45,7 @@ fn encounter_func(f: Function, operands: &mut NodeList) -> Result<(), String> {
 fn right_paren(
     operators: &mut TokenList,
     operands: &mut NodeList,
-) -> Result<(), String> {
+) -> Result<(), Error> {
     while let Some(top) = operators.pop() {
         match top {
             Token::LeftParenthesis => break,
@@ -63,13 +60,19 @@ fn right_paren(
 fn add_operator(
     operator: Operator,
     operands: &mut NodeList,
-) -> Result<(), String> {
+) -> Result<(), Error> {
     let rhs = operands
         .pop()
-        .ok_or(format!("Not enough operands for operator"))?;
+        .ok_or(Error::MissingOperands(format!(
+            "{:?}",
+            operator
+        )))?;
     let lhs = operands
         .pop()
-        .ok_or(format!("Not enough operands for operator"))?;
+        .ok_or(Error::MissingOperands(format!(
+            "{:?}",
+            operator
+        )))?;
     Ok(operands.push(make_node(
         Token::Operator(operator),
         Some(vec_deque![lhs, rhs]),
@@ -80,7 +83,7 @@ fn encounter_operator(
     cur_operator: Operator,
     operators: &mut TokenList,
     operands: &mut NodeList,
-) -> Result<(), String> {
+) -> Result<(), Error> {
     while let Some(top) = operators.pop() {
         match top {
             Token::Operator(top_operator) => {
@@ -111,7 +114,7 @@ fn encounter_operator(
 fn parse_tokens<'a>(
     tokens: TokenList,
     scope: &'a Scope,
-) -> Result<Root<'a>, String> {
+) -> Result<Root<'a>, Error> {
     let mut operators: TokenList = Vec::new();
     let mut operands: NodeList = Vec::new();
 
@@ -152,7 +155,7 @@ fn parse_tokens<'a>(
 
     // TODO: revisit this when the final output can also be a string
     operands.pop().map_or_else(
-        || Err(String::from("empty expression")),
+        || Err(Error::EmptyExpression),
         |node| Ok(Root { node, scope }),
     )
 }
