@@ -1,12 +1,19 @@
 use lexer::tokenize;
 
-use ast::{Args, Node};
+use ast::{Args, Evaluate, EvaluationResult, Node, Root, Scope};
 use tokens::{Function, Operator, Token, TokenList};
 
 type NodeList = Vec<Node>;
 
-pub fn parse(expr: &str) -> Result<Node, String> {
-    parse_tokens(tokenize(expr)?)
+pub fn eval<'a>(expr: &'a str, scope: &'a Scope) -> EvaluationResult {
+    parse_tokens(tokenize(expr, scope)?, scope)?.eval()
+}
+
+pub fn compile<'a>(
+    expr: &'a str,
+    scope: &'a Scope,
+) -> Result<Root<'a>, String> {
+    parse_tokens(tokenize(expr, scope)?, scope)
 }
 
 fn make_node(token: Token, args: Option<Args>) -> Node {
@@ -38,7 +45,7 @@ fn encounter_func(f: Function, operands: &mut NodeList) -> Result<(), String> {
     Ok(())
 }
 
-pub fn right_paren(
+fn right_paren(
     operators: &mut TokenList,
     operands: &mut NodeList,
 ) -> Result<(), String> {
@@ -53,7 +60,7 @@ pub fn right_paren(
     Ok(())
 }
 
-pub fn add_operator(
+fn add_operator(
     operator: Operator,
     operands: &mut NodeList,
 ) -> Result<(), String> {
@@ -69,7 +76,7 @@ pub fn add_operator(
     )))
 }
 
-pub fn encounter_operator(
+fn encounter_operator(
     cur_operator: Operator,
     operators: &mut TokenList,
     operands: &mut NodeList,
@@ -101,7 +108,10 @@ pub fn encounter_operator(
     Ok(())
 }
 
-pub fn parse_tokens(tokens: TokenList) -> Result<Node, String> {
+fn parse_tokens<'a>(
+    tokens: TokenList,
+    scope: &'a Scope,
+) -> Result<Root<'a>, String> {
     let mut operators: TokenList = Vec::new();
     let mut operands: NodeList = Vec::new();
 
@@ -140,9 +150,9 @@ pub fn parse_tokens(tokens: TokenList) -> Result<Node, String> {
         add_operator(operator, &mut operands)?
     }
 
-    // TODO: revisit this when the final output is a string/whatever, not just
-    // a float
-    operands
-        .pop()
-        .ok_or("Empty expression".to_string())
+    // TODO: revisit this when the final output can also be a string
+    operands.pop().map_or_else(
+        || Err(String::from("empty expression")),
+        |node| Ok(Root { node, scope }),
+    )
 }
