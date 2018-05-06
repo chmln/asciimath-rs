@@ -1,4 +1,4 @@
-use ast::{Args, Node, Scope, Variable};
+use ast::{Args, Node, Root, Scope, Variable};
 use functions::{Func, FUNCTIONS};
 use tokens::{Operator, Token};
 
@@ -51,7 +51,10 @@ pub fn eval_operator(
     }
 }
 
-fn get_fn<'a>(name: &str, scope: &'a Scope) -> Result<&'a Func, String> {
+pub fn resolve_fn<'a>(
+    name: &str,
+    scope: &'a Scope,
+) -> Result<&'a Func, String> {
     FUNCTIONS.get(name).map_or_else(
         || match scope.get_var(name) {
             Some(Variable::Function(f)) => Ok(f),
@@ -79,9 +82,9 @@ impl Evaluate for Node {
             Token::Operator(operator) => {
                 eval_operator(&operator, self.args, scope)
             },
-            Token::Function(f) => {
-                get_fn(&f.name.as_ref(), scope)?(&eval_args(self.args, scope)?)
-            },
+            Token::Function(f) => resolve_fn(&f.name.as_ref(), scope)?(
+                &eval_args(self.args, scope)?,
+            ),
 
             Token::Number(num) => Ok(num.value),
             Token::Variable(var) => {
@@ -102,5 +105,14 @@ impl Evaluate for Node {
     fn eval(self) -> EvaluationResult {
         let empty_scope = Scope::new();
         self.eval_with(&empty_scope)
+    }
+}
+
+impl<'a> Evaluate for Root<'a> {
+    fn eval(self) -> EvaluationResult {
+        self.node.eval_with(self.scope)
+    }
+    fn eval_with(self, scope: &Scope) -> EvaluationResult {
+        self.node.eval_with(scope)
     }
 }

@@ -1,3 +1,4 @@
+use ast::Scope;
 use std::{collections::VecDeque, fmt};
 use tokens::Token;
 
@@ -6,6 +7,11 @@ pub type Args = VecDeque<Node>;
 pub struct Node {
     pub token: Token,
     pub args: Option<Args>,
+}
+
+pub struct Root<'a> {
+    pub node: Node,
+    pub scope: &'a Scope,
 }
 
 impl fmt::Debug for Node {
