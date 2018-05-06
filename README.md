@@ -18,19 +18,31 @@ Simple, bare-bones, and efficient.
 - implicit multiplication
 
 
-## Roadmap
 
-- [x] Error handling and propogation 
+## High-Level Goals
+
+**Ease of use**
+
+This means that e.g. passing in variables to expressions and defining custom functions must be possible with minimum knowledge of this library's internals and abstractions. Errors must be helpful and relevant.
+
+**Minimalism**
+
+Focusing just on mathematical expressions will make it easy for this library to remain slim and deliver superior ergonomics.
+
+**Accuracy**
+
+Extensive testing and maximum precision must be a part of all the modules to prevent bugs and ensure consistency.
+
+## Immediate Roadmap
+
 - [ ] Embedded constants like `pi` and `e`
-- [x] Functions
-  - [x] basic (sin, cos, etc)
-  - [x] user-defined
+- [ ] More built-in functions
 - [ ] Support for word-variables (right now only single-letter variables are supported)
 - [ ] Thorough documentation
   - [x] basic use
   - [ ] available functions
 
-## Future Goals
+## Future
 
 The items below will be considered after ABI stabilization:
 
@@ -49,5 +61,7 @@ The items below will be considered after ABI stabilization:
 
 ## Motivation
 
-Created for the University of Toronto Mathematical Assessment Tool, to facilitate generation of randomized tests and quizzes, which are then automatically graded. 
+Created for the University of Toronto Mathematical Assessment Tool, to facilitate generation of randomized tests and quizzes which are then automatically graded. 
+
+While some great libraries aiming for similar goals do exist, they wouldn't reward me with such a fruitful Rust learning experience and imo sorely lack ergonomics. 
 
