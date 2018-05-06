@@ -1,36 +1,60 @@
 //! A mathematical expression parsing and evaluation library.
 //!
-//! # Get Started
+//! # Evaluating an expression with variables
 //!
-//! The example below demonstrates parsing and evaluation of an expression
-//! with user-defined variables. The compiled expression is immutable and can be evaluated with many scopes.
+//! `eval` is perfect for cases when you just need to evaluate an expression
+//! once, with a given a set of variables.
+//!
+//! For repeated evaluation of an expression, see the next example.
 //!
 //! ```
-//! extern crate asciimath;
-//! use asciimath::{parse,Scope,Evaluate};
+//! #[macro_use] extern crate asciimath;
+//! use asciimath::{eval,Evaluate};
 //!
-//! let parsed_expr = parse("(x + y * 4) ^ 3").unwrap();
-//! let mut scope = Scope::new();
-//! scope.set_var("x", 8);
-//! scope.set_var("y", 12.25);
+//! assert_eq!(Ok(185193.0), eval("(x + y * 4) ^ 3", &scope!{
+//!    "x" => 8,
+//!    "y" => 12.25
+//! }));
+//! ```
 //!
-//! assert_eq!(Ok(185193.0), parsed_expr.eval_with(&scope));
+//! # Compiling Expressions
+//!
+//! The example below demonstrates parsing and evaluation of an expression
+//! with user-defined variables. The compiled expression is immutable and can
+//! be evaluated with many scopes.
+//!
+//! ```
+//! #[macro_use] extern crate asciimath;
+//! use asciimath::{compile,Evaluate};
+//!
+//! let scope_one = scope!{
+//!    "x" => 8,
+//!    "y" => 12.25
+//! };
+//! let scope_two = scope!{
+//!    "x" => 3,
+//!    "y" => 0
+//! };
+//! let expression = compile("(x + y * 4) ^ 3", &scope_one).unwrap();
+//!
+//! assert_eq!(Ok(185193.0), expression.eval_with(&scope_one));
+//! //assert_eq!(Ok(27.0), expression.eval_with(&scope_two));
 //! ```
 //!
 //! # Custom Functions
 //!
 //! ```
-//! extern crate asciimath;
-//! use asciimath::{parse,Scope,Evaluate,CustomFn};
+//! #[macro_use] extern crate asciimath;
+//! use asciimath::{eval,Evaluate,CustomFn};
 //!
-//! let parsed_expr = parse("my_sum(x, 2, 3)").unwrap();
 //! let my_sum: CustomFn = |args| Ok(args.iter().sum());
 //!
-//! let mut scope = Scope::new();
-//! scope.set_var("x", 1);
-//! scope.set_var("my_sum", my_sum);
+//! let scope = scope!{
+//! "x" => 1,
+//! "my_sum" => my_sum,
+//! };
 //!
-//! assert_eq!(Ok(6.0), parsed_expr.eval_with(&scope));
+//! assert_eq!(Ok(6.0), eval("my_sum(x, 2, 3)",&scope));
 //! ```
 //!
 //!
@@ -46,6 +70,6 @@ mod lexer;
 mod parser;
 mod tokens;
 
-pub use ast::{Evaluate, Node, Scope};
+pub use ast::{Evaluate, Scope};
 pub use functions::CustomFn;
-pub use parser::parse;
+pub use parser::{compile, eval};

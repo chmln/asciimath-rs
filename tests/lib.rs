@@ -1,9 +1,9 @@
 extern crate asciimath;
-use self::asciimath::{parse, CustomFn, Evaluate, Scope};
+use self::asciimath::{compile, eval, CustomFn, Evaluate, Scope};
 
 #[test]
 fn single_item() {
-    assert_eq!(Ok(2.0), parse("2").unwrap().eval());
+    assert_eq!(Ok(2.0), eval("2", &Scope::new()));
 }
 
 #[test]
@@ -12,10 +12,7 @@ fn order_of_operations() {
         "3.000122",
         format!(
             "{:.6}",
-            parse("3 + 4 * 2 / ( 1 - 5 ) ^ 2 ^ 3")
-                .unwrap()
-                .eval()
-                .unwrap()
+            eval("3 + 4 * 2 / ( 1 - 5 ) ^ 2 ^ 3", &Scope::new()).unwrap()
         )
     );
 }
@@ -24,17 +21,10 @@ fn order_of_operations() {
 fn simple_vars() {
     let mut scope = Scope::new();
     scope.set_var("x", 16);
-    assert_eq!(
-        Ok(240.0),
-        parse("x^2-16").unwrap().eval_with(&scope)
-    );
 
-    assert!(
-        parse("y^2-16")
-            .unwrap()
-            .eval_with(&scope)
-            .is_err()
-    );
+    assert_eq!(Ok(240.0), eval("x^2-16", &scope));
+
+    assert!(eval("y^2-16", &scope).is_err());
 }
 
 #[test]
@@ -43,10 +33,7 @@ fn user_defined_functions() {
     let my_sum_func: CustomFn = |args| Ok(args.iter().sum::<f64>());
 
     scope.set_var("sum", my_sum_func);
-    assert_eq!(
-        Ok(6.0),
-        parse("sum(1,2,3)").unwrap().eval_with(&scope)
-    );
+    assert_eq!(Ok(6.0), eval("sum(1,2,3)", &scope));
 }
 
 #[test]
@@ -55,83 +42,65 @@ fn too_many_brackets() {
     scope.set_var("x", 16);
     assert_eq!(
         Ok(240.0),
-        parse("((((((x^2))-((16))))))")
-            .unwrap()
-            .eval_with(&scope)
+        eval("((((((x^2))-((16))))))", &scope)
     );
 }
 
 #[test]
 fn func_max() {
-    assert_eq!(Ok(2.0), parse("max(1,2)").unwrap().eval());
-    assert_eq!(Ok(1.0), parse("max(1)").unwrap().eval());
+    assert_eq!(Ok(2.0), eval("max(1,2)", &Scope::new()));
+    assert_eq!(Ok(1.0), eval("max(1)", &Scope::new()));
     assert_eq!(
         Ok(25.75),
-        parse("max(1,2,3,25.75,10.5,25.7)")
-            .unwrap()
-            .eval()
+        eval("max(1,2,3,25.75,10.5,25.7)", &Scope::new())
     );
 }
 
 #[test]
 fn func_min() {
-    assert_eq!(Ok(1.0), parse("min(1,2)").unwrap().eval());
-    assert_eq!(Ok(1.0), parse("min(1)").unwrap().eval());
+    assert_eq!(Ok(1.0), eval("min(1,2)", &Scope::new()));
+    assert_eq!(Ok(1.0), eval("min(1)", &Scope::new()));
     assert_eq!(
         Ok(1.0),
-        parse("min(1,2,3,25.75,10.5,25.7)")
-            .unwrap()
-            .eval()
+        eval("min(1,2,3,25.75,10.5,25.7)", &Scope::new())
     );
 }
 
 #[test]
 fn func_trig() {
-    assert_eq!(Ok(1.0), parse("sin(90)").unwrap().eval());
-    assert_eq!(Ok(0.5), parse("cos(0)/2").unwrap().eval());
+    assert_eq!(Ok(1.0), eval("sin(90)", &Scope::new()));
+    assert_eq!(Ok(0.5), eval("cos(0)/2", &Scope::new()));
     assert_eq!(
         "0.5",
         format!(
             "{:.1}",
-            parse("tan(45) / 2").unwrap().eval().unwrap()
+            eval("tan(45) / 2", &Scope::new()).unwrap()
         )
     );
 }
 
 #[test]
 fn func_nested() {
-    assert_eq!(Ok(1.0), parse("abs(abs(-1))").unwrap().eval());
+    assert_eq!(Ok(1.0), eval("abs(abs(-1))", &Scope::new()));
 }
 
 #[test]
 fn neg_numbers() {
     let mut scope = Scope::new();
     scope.set_var("x", 16);
-    assert_eq!(Ok(-1.0), parse("-1").unwrap().eval());
-    assert_eq!(
-        Ok(15.0),
-        parse("x+-1").unwrap().eval_with(&scope)
-    );
-    assert_eq!(
-        Ok(17.0),
-        parse("x--1").unwrap().eval_with(&scope)
-    );
-    assert_eq!(
-        Ok(17.0),
-        parse("x-(-1)").unwrap().eval_with(&scope)
-    );
-    assert_eq!(
-        Ok(-16.0),
-        parse("x*(-1)").unwrap().eval_with(&scope)
-    );
+    assert_eq!(Ok(-1.0), eval("-1", &scope));
+    assert_eq!(Ok(15.0), eval("x+-1", &scope));
+    assert_eq!(Ok(17.0), eval("x--1", &scope));
+    assert_eq!(Ok(17.0), eval("x-(-1)", &scope));
+    assert_eq!(Ok(-16.0), eval("x*(-1)", &scope));
 }
 
 #[test]
 fn func_not_enough_args() {
-    assert!(parse("max()").is_err());
+    assert!(eval("max()", &Scope::new()).is_err());
 }
 
 #[test]
 fn paren_mismatch() {
-    assert!(parse("x+())").is_err());
+    assert!(eval("x+())", &Scope::new()).is_err());
 }
