@@ -40,7 +40,7 @@
 //! let expression = compile("(x + y * 4) ^ 3", &scope_one).unwrap();
 //!
 //! assert_eq!(Ok(185193.0), expression.eval_with(&scope_one));
-//! //assert_eq!(Ok(27.0), expression.eval_with(&scope_two));
+//! assert_eq!(Ok(27.0), expression.eval_with(&scope_two));
 //! ```
 //!
 //! # Custom Functions

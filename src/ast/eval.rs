@@ -8,20 +8,21 @@ pub type EvaluationResult = Result<NumericLiteral, String>;
 pub trait Evaluate {
     /// Evaluates the node/expression with a given variable scope.
     ///
-    fn eval_with(self, scope: &Scope) -> EvaluationResult;
+    fn eval_with(&self, scope: &Scope) -> EvaluationResult;
 
     /// Evaluates the node/expression without any variables.
     ///
     /// This is just a shortcut to evaluate expressions without variables.
-    fn eval(self) -> EvaluationResult;
+    fn eval(&self) -> EvaluationResult;
 }
 
 pub fn eval_operator(
     operator: &Operator,
-    args: Option<Args>,
+    args: &Option<Args>,
     scope: &Scope,
 ) -> EvaluationResult {
-    let args = args.ok_or("operator must have args")?
+    let args = args.as_ref()
+        .ok_or("operator must have args")?
         .into_iter()
         .map(|node| node.eval_with(scope))
         .collect::<Result<Vec<NumericLiteral>, String>>()?;
@@ -65,7 +66,7 @@ pub fn resolve_fn<'a>(
 }
 
 fn eval_args(
-    args: Option<Args>,
+    args: &Option<Args>,
     scope: &Scope,
 ) -> Result<Vec<NumericLiteral>, String> {
     if let Some(args) = args {
@@ -77,17 +78,17 @@ fn eval_args(
 }
 
 impl Evaluate for Node {
-    fn eval_with(self, scope: &Scope) -> EvaluationResult {
+    fn eval_with(&self, scope: &Scope) -> EvaluationResult {
         match self.token {
-            Token::Operator(operator) => {
-                eval_operator(&operator, self.args, scope)
+            Token::Operator(ref operator) => {
+                eval_operator(&operator, &self.args, scope)
             },
-            Token::Function(f) => resolve_fn(&f.name.as_ref(), scope)?(
-                &eval_args(self.args, scope)?,
+            Token::Function(ref f) => resolve_fn(&f.name.as_ref(), scope)?(
+                &eval_args(&self.args, scope)?,
             ),
 
-            Token::Number(num) => Ok(num.value),
-            Token::Variable(var) => {
+            Token::Number(ref num) => Ok(num.value),
+            Token::Variable(ref var) => {
                 if let Some(Variable::Number(value)) = scope.get_var(&var.name)
                 {
                     return Ok(value.clone());
@@ -102,17 +103,17 @@ impl Evaluate for Node {
         }
     }
 
-    fn eval(self) -> EvaluationResult {
+    fn eval(&self) -> EvaluationResult {
         let empty_scope = Scope::new();
         self.eval_with(&empty_scope)
     }
 }
 
 impl<'a> Evaluate for Root<'a> {
-    fn eval(self) -> EvaluationResult {
+    fn eval(&self) -> EvaluationResult {
         self.node.eval_with(self.scope)
     }
-    fn eval_with(self, scope: &Scope) -> EvaluationResult {
+    fn eval_with(&self, scope: &Scope) -> EvaluationResult {
         self.node.eval_with(scope)
     }
 }
