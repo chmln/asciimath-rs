@@ -65,7 +65,7 @@ macro_rules! scope {
             let _cap = scope!(@count $($key),*);
             let mut _map = $crate::Scope::with_capacity(_cap);
             $(
-                let _ = _map.set_var($key, $value);
+                _map.set_var($key, $value);
             )*
             _map
         }
