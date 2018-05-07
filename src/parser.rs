@@ -24,7 +24,7 @@ fn encounter_func(f: Function, operands: &mut NodeList) -> Result<(), Error> {
     // ASSUMPTION: at least one argument per function
     args.push_front(operands
         .pop()
-        .ok_or(Error::NotEnoughFunctionParams(f.name.clone()))?);
+        .ok_or_else(|| Error::NotEnoughFunctionParams(f.name.clone()))?);
 
     while let Some(last) = operands.pop() {
         if last.token != Token::Comma {
@@ -34,7 +34,7 @@ fn encounter_func(f: Function, operands: &mut NodeList) -> Result<(), Error> {
         else {
             args.push_front(operands
                 .pop()
-                .ok_or(Error::FunctionSyntaxError(f.name.clone()))?);
+                .ok_or_else(|| Error::FunctionSyntaxError(f.name.clone()))?);
         }
     }
 
@@ -63,16 +63,10 @@ fn add_operator(
 ) -> Result<(), Error> {
     let rhs = operands
         .pop()
-        .ok_or(Error::MissingOperands(format!(
-            "{:?}",
-            operator
-        )))?;
+        .ok_or_else(|| Error::MissingOperands(format!("{:?}", operator)))?;
     let lhs = operands
         .pop()
-        .ok_or(Error::MissingOperands(format!(
-            "{:?}",
-            operator
-        )))?;
+        .ok_or_else(|| Error::MissingOperands(format!("{:?}", operator)))?;
     Ok(operands.push(make_node(
         Token::Operator(operator),
         Some(vec_deque![lhs, rhs]),
