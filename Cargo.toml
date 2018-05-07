@@ -3,11 +3,13 @@ name = "asciimath"
 version = "0.7.2-alpha.0"
 authors = ["Gregory <gregory.mkv@gmail.com>"]
 description = "Mathematical expression parser and evaluator"
+keywords = ["math", "expression", "evaluation", "parser"]
 license = "MIT"
 documentation = "https://docs.rs/asciimath/0.3.0/asciimath/"
 homepage = "https://github.com/chmln/asciimath-rs"
 repository = "https://github.com/chmln/asciimath-rs.git"
 readme = "README.md"
+categories = ["science", "parsing"]
 
 [lib]
 name = "asciimath"
@@ -17,6 +19,7 @@ path = "./src/lib.rs"
 lto = true
 opt-level = 3
 debug = false
+debug-assertions = false
 
 [dependencies]
 lazy_static = "1.0.0"
