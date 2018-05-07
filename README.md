@@ -5,8 +5,6 @@
 
 # asciimath-rs
 
-Parses mathematical (infix) expressions into an Abstract Syntax Tree using  Dijkstra's "shunting yard" algorithm.
-
 Simple, bare-bones, and efficient.
 
 ## Features
@@ -50,3 +48,6 @@ The items below will be considered after ABI stabilization:
 
 While some great libraries aiming for similar goals do exist, they wouldn't reward me with such a fruitful Rust learning experience and imo sorely lack ergonomics.
 
+## Implementation
+
+The parser is loosely based on Dijkstra's "shunting yard" algorithm for converting infix expressions into postfix expressions. However, instead of going from infix to postfix strings, we parse the expression straight into an Abstract Syntax Tree. 
