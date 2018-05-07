@@ -3,10 +3,7 @@
 [![](https://docs.rs/asciimath/badge.svg)](https://docs.rs/asciimath)
 [![CI](https://circleci.com/gh/chmln/asciimath-rs.svg?style=svg)](https://circleci.com/gh/chmln/asciimath-rs)
 
-
 # asciimath-rs
-
-Parses mathematical (infix) expressions into an Abstract Syntax Tree using  Dijkstra's "shunting yard" algorithm.
 
 Simple, bare-bones, and efficient.
 
@@ -19,7 +16,6 @@ Simple, bare-bones, and efficient.
 - compiling expressions and evaluating with different sets of variables
 - f64 output
 - Baked-in essential functions and constants
-
 
 ## High-Level Goals
 
@@ -48,13 +44,10 @@ The items below will be considered after ABI stabilization:
 - Vector calculus
 - Matrices and vector spaces
 
-## Non-goals
-
-- php-esque abominations like `a=func(x) && b=func(y) && 'what'`
-
 ## Motivation
-
-Created for the University of Toronto Mathematical Assessment Tool, to facilitate generation of randomized tests and quizzes which are then automatically graded.
 
 While some great libraries aiming for similar goals do exist, they wouldn't reward me with such a fruitful Rust learning experience and imo sorely lack ergonomics.
 
+## Implementation
+
+The parser is loosely based on Dijkstra's "shunting yard" algorithm for converting infix expressions into postfix expressions. However, instead of going from infix to postfix strings, we parse the expression straight into an Abstract Syntax Tree. 
