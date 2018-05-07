@@ -1,6 +1,6 @@
-use ast::{Args, Node, Root, Scope, Variable};
+use ast::{resolve_fn, resolve_var, Args, Node, Root, Scope, Variable};
 use error::Error;
-use functions::{Func, FUNCTIONS};
+
 use tokens::{Operator, Token};
 
 pub type NumericLiteral = f64;
@@ -24,10 +24,7 @@ pub fn eval_operator(
     scope: &Scope,
 ) -> EvaluationResult {
     let args = args.as_ref()
-        .ok_or(Error::MissingOperands(format!(
-            "{:?}",
-            operator
-        )))?
+        .ok_or_else(|| Error::MissingOperands(format!("{:?}", operator)))?
         .into_iter()
         .map(|node| node.eval_with(scope))
         .collect::<Result<Vec<NumericLiteral>, Error>>()?;
@@ -46,25 +43,12 @@ pub fn eval_operator(
         )?
             / evaled_args.product::<NumericLiteral>()),
         Operator::Exponentiate => {
-            let base = evaled_args
-                .nth(0)
-                .ok_or(Error::MissingOperands(format!(
-                    "{:?}",
-                    operator
-                )))?;
+            let base = evaled_args.nth(0).ok_or_else(|| {
+                Error::MissingOperands(format!("{:?}", operator))
+            })?;
             Ok(evaled_args.fold(*base, |acc, v| acc.powf(*v)))
         },
     }
-}
-
-pub fn resolve_fn<'a>(name: &str, scope: &'a Scope) -> Result<&'a Func, Error> {
-    FUNCTIONS.get(name).map_or_else(
-        || match scope.get_var(name) {
-            Some(Variable::Function(f)) => Ok(f),
-            _ => Err(Error::UnknownFunction(name.to_string())),
-        },
-        |f| Ok(f),
-    )
 }
 
 fn eval_args(
@@ -92,8 +76,7 @@ impl Evaluate for Node {
 
             Token::Number(ref num) => Ok(num.value),
             Token::Variable(ref var) => {
-                if let Some(Variable::Number(value)) = scope.get_var(&var.name)
-                {
+                if let Ok(value) = resolve_var(&var.name, scope) {
                     return Ok(value.clone());
                 }
 

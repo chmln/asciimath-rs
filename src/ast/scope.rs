@@ -1,5 +1,5 @@
 use ast::NumericLiteral;
-use functions::CustomFn;
+use constants::CustomFn;
 use std::{collections::HashMap, convert::Into};
 
 pub enum Variable {

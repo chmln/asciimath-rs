@@ -1,5 +1,6 @@
 extern crate asciimath;
 use self::asciimath::{compile, eval, CustomFn, Error, Evaluate, Scope};
+use std::f64;
 
 #[test]
 fn single_item() {
@@ -111,4 +112,17 @@ fn func_not_enough_args() {
 #[test]
 fn paren_mismatch() {
     assert!(eval("x+())", &Scope::new()).is_err());
+}
+
+#[test]
+fn constants() {
+    assert_eq!(
+        Ok(f64::consts::PI * 2.0),
+        eval("2PI", &Scope::new())
+    );
+}
+
+#[test]
+fn division_by_zero() {
+    assert_eq!(Ok(f64::INFINITY), eval("1/0", &Scope::new()));
 }

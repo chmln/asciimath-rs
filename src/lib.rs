@@ -80,13 +80,13 @@ extern crate lazy_static;
 #[macro_use]
 mod macros;
 mod ast;
+mod constants;
 mod error;
-mod functions;
 mod lexer;
 mod parser;
 mod tokens;
 
 pub use ast::{Evaluate, Scope};
+pub use constants::CustomFn;
 pub use error::Error;
-pub use functions::CustomFn;
 pub use parser::{compile, eval};

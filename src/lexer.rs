@@ -1,4 +1,4 @@
-use ast::{resolve_fn, NumericLiteral, Scope};
+use ast::{resolve_fn, resolve_var, NumericLiteral, Scope};
 use error::Error;
 use tokens::{Function, Number, Operator, Token, TokenList, Variable};
 
@@ -11,7 +11,7 @@ fn resolve_vars(expr: &str, scope: &Scope) -> TokenList {
         let ch = chars.next();
         match ch {
             Some(ch) => {
-                if temp.is_empty() || scope.get_var(&temp).is_none() {
+                if temp.is_empty() || resolve_var(&temp, scope).is_err() {
                     temp.push(ch);
                     continue;
                 }
@@ -24,7 +24,7 @@ fn resolve_vars(expr: &str, scope: &Scope) -> TokenList {
         }
 
         if !temp.is_empty() {
-            if scope.get_var(&temp).is_some() {
+            if resolve_var(&temp, scope).is_ok() {
                 tokens.push(Token::Variable(Variable {
                     name: temp.clone(),
                 }));
