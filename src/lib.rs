@@ -64,8 +64,9 @@
 //! assert_eq!(Ok(6.0), eval("my_sum(x, 2, 3)",&scope));
 //! ```
 //!
-//! # Built-in Functions
+//! # Builtins
 //!
+//! Functions:
 //! - `cos(x)`
 //! - `tan(x)`
 //! - `max(a,b,c,...)`
@@ -73,6 +74,17 @@
 //! - `abs(x)`
 //! - `sqrt(x)`
 //! - `cbrt(x)`
+//! - `log(base, x)`
+//! - `log_10(x)`
+//! - `ln(x)`
+//! - `floor(x)`
+//! - `ceil(x)`
+//!
+//! Constants:
+//! - PI
+//! - E (Euler's number)
+//! - INFINITY
+//! - NEG_INFINITY
 
 #[macro_use]
 extern crate lazy_static;
