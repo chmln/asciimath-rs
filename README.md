@@ -37,10 +37,6 @@ Extensive testing and maximum precision must be a part of all the modules to pre
 
 - [ ] Embedded constants like `pi` and `e`
 - [ ] More built-in functions
-- [ ] Support for word-variables (right now only single-letter variables are supported)
-- [ ] Thorough documentation
-  - [x] basic use
-  - [ ] available functions
 
 ## Future
 
