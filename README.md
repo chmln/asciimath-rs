@@ -6,17 +6,19 @@
 
 # asciimath-rs
 
-Parses mathematical (infix) expressions into an Abstract Syntax Tree using  Dijkstra's "shunting yard" algorithm. 
+Parses mathematical (infix) expressions into an Abstract Syntax Tree using  Dijkstra's "shunting yard" algorithm.
 
 Simple, bare-bones, and efficient.
 
 ## Features
 
 - evaluation
-  - compile the expression just once, evaluate with a different set of variables
-- support for variables and custom functions
 - implicit multiplication
-
+- support for variables, both single-letter and word variables
+- easily-defined custom functions
+- compiling expressions and evaluating with different sets of variables
+- f64 output
+- Baked-in essential functions and constants
 
 
 ## High-Level Goals
@@ -32,11 +34,6 @@ Focusing just on mathematical expressions will make it easy for this library to 
 **Accuracy**
 
 Extensive testing and maximum precision must be a part of all the modules to prevent bugs and ensure consistency.
-
-## Immediate Roadmap
-
-- [ ] Embedded constants like `pi` and `e`
-- [ ] More built-in functions
 
 ## Future
 
@@ -57,7 +54,7 @@ The items below will be considered after ABI stabilization:
 
 ## Motivation
 
-Created for the University of Toronto Mathematical Assessment Tool, to facilitate generation of randomized tests and quizzes which are then automatically graded. 
+Created for the University of Toronto Mathematical Assessment Tool, to facilitate generation of randomized tests and quizzes which are then automatically graded.
 
-While some great libraries aiming for similar goals do exist, they wouldn't reward me with such a fruitful Rust learning experience and imo sorely lack ergonomics. 
+While some great libraries aiming for similar goals do exist, they wouldn't reward me with such a fruitful Rust learning experience and imo sorely lack ergonomics.
 
