@@ -84,6 +84,19 @@ fn func_trig() {
 }
 
 #[test]
+fn func_log() {
+    assert_eq!(Ok(2.0), eval("log_10(100)", &Scope::new()));
+    assert_eq!(Ok(2.0), eval("log(2, 4)", &Scope::new()));
+    assert_eq!(Ok(1.0), eval("ln(E)", &Scope::new()));
+}
+
+#[test]
+fn func_floor_ceil() {
+    assert_eq!(Ok(2.0), eval("floor(2.5)", &Scope::new()));
+    assert_eq!(Ok(2.0), eval("ceil(1.51)", &Scope::new()));
+}
+
+#[test]
 fn func_nested() {
     assert_eq!(Ok(1.0), eval("abs(abs(-1))", &Scope::new()));
 }
