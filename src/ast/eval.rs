@@ -1,4 +1,4 @@
-use ast::{resolve_fn, resolve_var, Args, Node, Root, Scope, Variable};
+use ast::{resolve_fn, resolve_var, Args, Node, Root, Scope};
 use error::Error;
 
 use tokens::{Operator, Token};
