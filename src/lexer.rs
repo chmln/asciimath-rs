@@ -25,9 +25,7 @@ fn resolve_vars(expr: &str, scope: &Scope) -> TokenList {
 
         if !temp.is_empty() {
             if resolve_var(&temp, scope).is_ok() {
-                tokens.push(Token::Variable(Variable {
-                    name: temp.clone(),
-                }));
+                tokens.push(Token::Variable(Variable { name: temp.clone() }));
                 tokens.push(Token::Operator(Operator::Multiply));
                 if let Some(ch) = ch {
                     temp = ch.to_string();
@@ -107,9 +105,13 @@ fn get_token(ch: char) -> Option<Token> {
         '*' => Some(Token::Operator(Operator::Multiply)),
         '/' => Some(Token::Operator(Operator::Divide)),
         '^' => Some(Token::Operator(Operator::Exponentiate)),
+        '>' => Some(Token::Operator(Operator::IsGreaterThan)),
+        '<' => Some(Token::Operator(Operator::IsLessThan)),
+        '=' => Some(Token::Operator(Operator::IsEqualTo)),
         '(' => Some(Token::LeftParenthesis),
         ')' => Some(Token::RightParenthesis),
         ',' => Some(Token::Comma),
+        '!' => Some(Token::Operator(Operator::Not)),
         _ => None,
     }
 }
@@ -132,8 +134,8 @@ pub fn tokenize<'a>(expr: &str, scope: &'a Scope) -> Result<TokenList, Error> {
             }
         }
 
-        let cur_token = get_token(c);
         let t_mut = &mut tokens;
+        let cur_token = get_token(c);
 
         debug!("CUR: {:?}, TEMP: {}", cur_token, temp);
 
@@ -178,7 +180,33 @@ pub fn tokenize<'a>(expr: &str, scope: &'a Scope) -> Result<TokenList, Error> {
                 },
                 // not subtraction - proceed
                 _ => {
-                    t_mut.push(token);
+                    if token == Token::Operator(Operator::IsEqualTo) {
+                        match t_mut.last() {
+                            Some(Token::Operator(Operator::IsGreaterThan)) => {
+                                t_mut.pop();
+                                t_mut.push(Token::Operator(
+                                    Operator::IsGreaterThanOrEqualTo,
+                                ));
+                            },
+                            Some(Token::Operator(Operator::IsLessThan)) => {
+                                t_mut.pop();
+                                t_mut.push(Token::Operator(
+                                    Operator::IsLessThanOrEqualTo,
+                                ));
+                            },
+                            Some(Token::Operator(Operator::Not)) => {
+                                t_mut.pop();
+                                t_mut.push(Token::Operator(
+                                    Operator::IsNotEqualTo,
+                                ));
+                            },
+                            Some(Token::Operator(Operator::IsEqualTo)) => {},
+                            _ => t_mut.push(token),
+                        }
+                    }
+                    else {
+                        t_mut.push(token);
+                    }
                 },
             }
         }
