@@ -2,6 +2,7 @@ use lexer::tokenize;
 
 use ast::{Args, Evaluate, EvaluationResult, Node, Root, Scope};
 use error::Error;
+use std::collections::VecDeque;
 use tokens::{Function, Operator, Token, TokenList};
 
 type NodeList = Vec<Node>;
@@ -61,16 +62,19 @@ fn add_operator(
     operator: Operator,
     operands: &mut NodeList,
 ) -> Result<(), Error> {
-    let rhs = operands
-        .pop()
-        .ok_or_else(|| Error::MissingOperands(format!("{:?}", operator)))?;
-    let lhs = operands
-        .pop()
-        .ok_or_else(|| Error::MissingOperands(format!("{:?}", operator)))?;
-    Ok(operands.push(make_node(
-        Token::Operator(operator),
-        Some(vec_deque![lhs, rhs]),
-    )))
+    let err = format!("{:?}", operator);
+    let num_operands = operator.num_operands();
+
+    let mut args: VecDeque<Node> =
+        VecDeque::with_capacity(num_operands as usize);
+
+    for _ in 0..num_operands {
+        args.push_front(operands
+            .pop()
+            .ok_or_else(|| Error::MissingOperands(err.clone()))?);
+    }
+
+    Ok(operands.push(make_node(Token::Operator(operator), Some(args))))
 }
 
 fn encounter_operator(

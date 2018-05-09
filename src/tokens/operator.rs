@@ -6,6 +6,13 @@ pub enum Operator {
     Multiply,
     Divide,
     Exponentiate,
+    IsGreaterThan,
+    IsLessThan,
+    IsGreaterThanOrEqualTo,
+    IsLessThanOrEqualTo,
+    IsEqualTo,
+    IsNotEqualTo,
+    Not,
 }
 
 impl fmt::Debug for Operator {
@@ -19,6 +26,13 @@ impl fmt::Debug for Operator {
                 Operator::Multiply => "*",
                 Operator::Divide => "/",
                 Operator::Exponentiate => "^",
+                Operator::IsGreaterThan => ">",
+                Operator::IsLessThan => "<",
+                Operator::IsGreaterThanOrEqualTo => ">=",
+                Operator::IsLessThanOrEqualTo => "<=",
+                Operator::IsEqualTo => "==",
+                Operator::IsNotEqualTo => "!=",
+                Operator::Not => "!",
             }
         )
     }
@@ -31,10 +45,7 @@ impl cmp::PartialEq for Operator {
 }
 impl cmp::PartialOrd for Operator {
     fn partial_cmp(&self, other: &Operator) -> Option<cmp::Ordering> {
-        Some(
-            self.get_precedence()
-                .cmp(&other.get_precedence()),
-        )
+        Some(self.get_precedence().cmp(&other.get_precedence()))
     }
 }
 
@@ -46,6 +57,20 @@ impl Operator {
             Operator::Multiply => 3,
             Operator::Divide => 3,
             Operator::Exponentiate => 4,
+            Operator::IsGreaterThan
+            | Operator::IsLessThan
+            | Operator::IsGreaterThanOrEqualTo
+            | Operator::IsLessThanOrEqualTo
+            | Operator::IsEqualTo
+            | Operator::IsNotEqualTo
+            | Operator::Not => 2,
+        }
+    }
+
+    pub fn num_operands(&self) -> i8 {
+        match self {
+            Operator::Not => 1,
+            _ => 2,
         }
     }
 

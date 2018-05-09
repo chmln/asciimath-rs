@@ -44,8 +44,7 @@ impl Scope {
     }
 
     pub fn set_var<T: Into<Variable>>(&mut self, var_name: &str, value: T) {
-        self.variables
-            .insert(var_name.to_string(), value.into());
+        self.variables.insert(var_name.to_string(), value.into());
     }
 
     pub fn get_var(&self, var_name: &str) -> Option<&Variable> {

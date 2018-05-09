@@ -18,36 +18,50 @@ pub trait Evaluate {
     fn eval(&self) -> EvaluationResult;
 }
 
+fn negate(n: f64) -> f64 {
+    if n == 0.0 {
+        1.0
+    }
+    else {
+        0.0
+    }
+}
+
 pub fn eval_operator(
     operator: &Operator,
-    args: &Option<Args>,
-    scope: &Scope,
+    args: Vec<NumericLiteral>,
 ) -> EvaluationResult {
-    let args = args.as_ref()
-        .ok_or_else(|| Error::MissingOperands(format!("{:?}", operator)))?
-        .into_iter()
-        .map(|node| node.eval_with(scope))
-        .collect::<Result<Vec<NumericLiteral>, Error>>()?;
-
     let ref mut evaled_args = args.iter();
+    let op_str = format!("{:?}", operator);
 
     match operator {
         Operator::Add => Ok(evaled_args.sum()),
-        Operator::Substract => Ok(evaled_args.nth(0).ok_or(
-            Error::MissingOperands(format!("{:?}", operator)),
-        )?
+        Operator::Substract => Ok(evaled_args
+            .nth(0)
+            .ok_or_else(|| Error::MissingOperands(op_str))?
             - evaled_args.sum::<NumericLiteral>()),
         Operator::Multiply => Ok(evaled_args.product()),
-        Operator::Divide => Ok(evaled_args.nth(0).ok_or(
-            Error::MissingOperands(format!("{:?}", operator)),
-        )?
+        Operator::Divide => Ok(evaled_args
+            .nth(0)
+            .ok_or_else(|| Error::MissingOperands(op_str))?
             / evaled_args.product::<NumericLiteral>()),
         Operator::Exponentiate => {
-            let base = evaled_args.nth(0).ok_or_else(|| {
-                Error::MissingOperands(format!("{:?}", operator))
-            })?;
+            let base = evaled_args
+                .nth(0)
+                .ok_or_else(|| Error::MissingOperands(op_str))?;
             Ok(evaled_args.fold(*base, |acc, v| acc.powf(*v)))
         },
+        Operator::IsGreaterThan => Ok(((args[0] > args[1]) as i8).into()),
+        Operator::IsLessThan => Ok(((args[0] < args[1]) as i8).into()),
+        Operator::IsGreaterThanOrEqualTo => {
+            Ok(((args[0] >= args[1]) as i8).into())
+        },
+        Operator::IsLessThanOrEqualTo => {
+            Ok(((args[0] <= args[1]) as i8).into())
+        },
+        Operator::IsEqualTo => Ok(((args[0] == args[1]) as i8).into()),
+        Operator::IsNotEqualTo => Ok(((args[0] != args[1]) as i8).into()),
+        Operator::Not => Ok(negate(args[0])),
     }
 }
 
@@ -68,7 +82,16 @@ impl Evaluate for Node {
     fn eval_with(&self, scope: &Scope) -> EvaluationResult {
         match self.token {
             Token::Operator(ref operator) => {
-                eval_operator(&operator, &self.args, scope)
+                let args = self.args
+                    .as_ref()
+                    .ok_or_else(|| {
+                        Error::MissingOperands(format!("{:?}", operator))
+                    })?
+                    .into_iter()
+                    .map(|node| node.eval_with(scope))
+                    .collect::<Result<Vec<NumericLiteral>, Error>>()?;
+
+                eval_operator(&operator, args)
             },
             Token::Function(ref f) => resolve_fn(&f.name.as_ref(), scope)?(
                 &eval_args(&self.args, scope, f.name.clone())?,
@@ -82,10 +105,7 @@ impl Evaluate for Node {
 
                 Err(Error::UnknownVariable(var.name.clone()))
             },
-            _ => Err(Error::CannotEvaluateToken(format!(
-                "{:?}",
-                self.token
-            ))),
+            _ => Err(Error::CannotEvaluateToken(format!("{:?}", self.token))),
         }
     }
 

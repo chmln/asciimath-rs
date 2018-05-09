@@ -19,6 +19,20 @@ fn order_of_operations() {
 }
 
 #[test]
+fn comparison_operators() {
+    let mut scope = Scope::new();
+    scope.set_var("x", -1);
+
+    assert_eq!(Ok(0.0), eval("x > x", &scope));
+    assert_eq!(Ok(1.0), eval("x >= x", &scope));
+    assert_eq!(Ok(1.0), eval("x <= x", &scope));
+    assert_eq!(Ok(0.0), eval("x < x", &scope));
+    assert_eq!(Ok(0.0), eval("x != x", &scope));
+    assert_eq!(Ok(0.0), eval("!(x == x)", &scope));
+    assert_eq!(eval("x != x", &scope), eval("!(x == x)", &scope));
+}
+
+#[test]
 fn simple_vars() {
     let mut scope = Scope::new();
     scope.set_var("x", 16);
@@ -44,30 +58,21 @@ fn user_defined_functions() {
 fn too_many_brackets() {
     let mut scope = Scope::new();
     scope.set_var("x", 16);
-    assert_eq!(
-        Ok(240.0),
-        eval("((((((x^2))-((16))))))", &scope)
-    );
+    assert_eq!(Ok(240.0), eval("((((((x^2))-((16))))))", &scope));
 }
 
 #[test]
 fn func_max() {
     assert_eq!(Ok(2.0), eval("max(1,2)", &Scope::new()));
     assert_eq!(Ok(1.0), eval("max(1)", &Scope::new()));
-    assert_eq!(
-        Ok(25.75),
-        eval("max(1,2,3,25.75,10.5,25.7)", &Scope::new())
-    );
+    assert_eq!(Ok(25.75), eval("max(1,2,3,25.75,10.5,25.7)", &Scope::new()));
 }
 
 #[test]
 fn func_min() {
     assert_eq!(Ok(1.0), eval("min(1,2)", &Scope::new()));
     assert_eq!(Ok(1.0), eval("min(1)", &Scope::new()));
-    assert_eq!(
-        Ok(1.0),
-        eval("min(1,2,3,25.75,10.5,25.7)", &Scope::new())
-    );
+    assert_eq!(Ok(1.0), eval("min(1,2,3,25.75,10.5,25.7)", &Scope::new()));
 }
 
 #[test]
@@ -76,10 +81,7 @@ fn func_trig() {
     assert_eq!(Ok(0.5), eval("cos(0)/2", &Scope::new()));
     assert_eq!(
         "0.5",
-        format!(
-            "{:.1}",
-            eval("tan(45) / 2", &Scope::new()).unwrap()
-        )
+        format!("{:.1}", eval("tan(45) / 2", &Scope::new()).unwrap())
     );
 }
 
@@ -115,9 +117,7 @@ fn neg_numbers() {
 #[test]
 fn func_not_enough_args() {
     assert_eq!(
-        Err(Error::NotEnoughFunctionParams(
-            "max".to_string()
-        )),
+        Err(Error::NotEnoughFunctionParams("max".to_string())),
         eval("max()", &Scope::new())
     );
 }
@@ -129,10 +129,7 @@ fn paren_mismatch() {
 
 #[test]
 fn constants() {
-    assert_eq!(
-        Ok(f64::consts::PI * 2.0),
-        eval("2PI", &Scope::new())
-    );
+    assert_eq!(Ok(f64::consts::PI * 2.0), eval("2PI", &Scope::new()));
 }
 
 #[test]
