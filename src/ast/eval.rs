@@ -93,17 +93,17 @@ impl Evaluate for Node {
 
                 eval_operator(&operator, args)
             },
-            Token::Function(ref f) => resolve_fn(&f.name.as_ref(), scope)?(
-                &eval_args(&self.args, scope, f.name.clone())?,
-            ),
+            Token::Function(ref f) => {
+                resolve_fn(f, scope)?(&eval_args(&self.args, scope, f.clone())?)
+            },
 
-            Token::Number(ref num) => Ok(num.value),
+            Token::Number(num) => Ok(num),
             Token::Variable(ref var) => {
-                if let Ok(value) = resolve_var(&var.name, scope) {
+                if let Ok(value) = resolve_var(&var, scope) {
                     return Ok(value.clone());
                 }
 
-                Err(Error::UnknownVariable(var.name.clone()))
+                Err(Error::UnknownVariable(var.clone()))
             },
             _ => Err(Error::CannotEvaluateToken(format!("{:?}", self.token))),
         }

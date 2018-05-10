@@ -17,8 +17,8 @@ pub struct Root<'a> {
 impl fmt::Debug for Node {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.token {
-            Token::Variable(ref var) => write!(f, "{}", var.name),
-            Token::Number(ref num) => write!(f, "{}", num.value),
+            Token::Variable(ref var) => write!(f, "{}", var),
+            Token::Number(ref num) => write!(f, "{}", num),
             _ => write!(f, "({:?} {:?})", self.token, self.args),
         }
     }

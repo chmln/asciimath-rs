@@ -1,14 +1,13 @@
 use ast::{resolve_fn, resolve_var, NumericLiteral, Scope};
 use error::Error;
 use std::{iter::Peekable, str};
-use tokens::{Function, Number, Operator, Token, TokenList, Variable};
+use tokens::{Operator, Token, TokenList};
 
 fn consume_while<F>(it: &mut Peekable<str::Chars>, x: F) -> String
 where
     F: Fn(char) -> bool,
 {
     let mut s = String::with_capacity(5);
-
     while let Some(&ch) = it.peek() {
         if x(ch) {
             it.next().unwrap();
@@ -26,7 +25,7 @@ fn resolve_vars(expr: &str, scope: &Scope, mut tokens: &mut Vec<Token>) {
     let mut is_valid_var = false;
 
     let new_var = |name, t: &mut Vec<Token>| {
-        t.push(Token::Variable(Variable { name }));
+        t.push(Token::Variable(name));
         t.push(Token::Operator(Operator::Multiply));
     };
 
@@ -52,34 +51,41 @@ fn resolve_vars(expr: &str, scope: &Scope, mut tokens: &mut Vec<Token>) {
             var.clear();
             continue;
         }
-
         break;
     }
 }
 
-fn parse_implicit(expr: &str, scope: &Scope) -> Result<TokenList, Error> {
-    let mut tokens: TokenList = Vec::with_capacity(expr.len() * 2);
+fn parse_implicit(
+    expr: &str,
+    scope: &Scope,
+    tokens: &mut TokenList,
+) -> Result<(), Error> {
     let mut chars = expr.chars().peekable();
 
+    if tokens.last() == Some(&Token::RightParenthesis) {
+        tokens.push(Token::Operator(Operator::Multiply));
+    }
+
     while let Some(&ch) = chars.peek() {
-        let mut r = chars.by_ref();
         match ch {
             '0'...'9' => {
-                let num = consume_while(r, |n| n.is_digit(10) || n == '.');
+                let num = consume_while(chars.by_ref(), |n| {
+                    n.is_digit(10) || n == '.'
+                });
                 let n = num.parse::<NumericLiteral>()
                     .map_err(|_e| Error::InvalidToken(num))?;
-                tokens.push(Token::Number(Number::new(n)));
+                tokens.push(Token::Number(n));
                 tokens.push(Token::Operator(Operator::Multiply));
             },
             'a'...'z' | 'A'...'Z' => {
-                let mut vars = consume_while(r, |c| c.is_alphabetic());
-                resolve_vars(&vars, scope, &mut tokens);
-                r.next();
+                let mut vars = consume_while(&mut chars, |c| c.is_alphabetic());
+                resolve_vars(&vars, scope, tokens);
+                chars.by_ref().next();
             },
             _ => {},
         }
     }
-    Ok(tokens)
+    Ok(())
 }
 
 fn get_token(ch: Option<&char>, t: &mut Vec<Token>) -> Option<Token> {
@@ -92,7 +98,7 @@ fn get_token(ch: Option<&char>, t: &mut Vec<Token>) -> Option<Token> {
                 | Some(Token::Function(_))
                 | Some(Token::Operator(_))
                 | None => {
-                    t.push(Token::Number(Number::new(-1)));
+                    t.push(Token::Number(-1 as NumericLiteral));
                     t.push(Token::Operator(Operator::Multiply));
                     None
                 },
@@ -142,15 +148,12 @@ pub fn tokenize<'a>(expr: &str, scope: &'a Scope) -> Result<TokenList, Error> {
 
         if !temp.is_empty() {
             if chars.peek() == Some(&'(') && resolve_fn(&temp, scope).is_ok() {
-                tokens.push(Token::Function(Function::new(temp.clone())));
-                chars.by_ref().next();
+                tokens.push(Token::Function(temp));
+                chars.next();
                 continue;
             }
             else {
-                if tokens.last() == Some(&Token::RightParenthesis) {
-                    tokens.push(Token::Operator(Operator::Multiply));
-                }
-                tokens.append(&mut parse_implicit(&temp, scope)?);
+                parse_implicit(&temp, scope, &mut tokens)?;
                 if chars.peek() != Some(&'(') {
                     tokens.pop();
                 }
@@ -160,12 +163,10 @@ pub fn tokenize<'a>(expr: &str, scope: &'a Scope) -> Result<TokenList, Error> {
         if let Some(token) = get_token(chars.peek(), &mut tokens) {
             tokens.push(token);
         }
-
         chars.next();
     }
 
     debug!("Tokens: {:?}", tokens);
     debug!("--------------------");
-
     Ok(tokens)
 }

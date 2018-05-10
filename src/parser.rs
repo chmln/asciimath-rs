@@ -2,8 +2,8 @@ use lexer::tokenize;
 
 use ast::{Args, Evaluate, EvaluationResult, Node, Root, Scope};
 use error::Error;
-use std::collections::VecDeque;
-use tokens::{Function, Operator, Token, TokenList};
+use std::{collections::VecDeque, string::ToString};
+use tokens::{Operator, Token, TokenList};
 
 type NodeList = Vec<Node>;
 
@@ -19,13 +19,13 @@ fn make_node(token: Token, args: Option<Args>) -> Node {
     Node { token, args }
 }
 
-fn encounter_func(f: Function, operands: &mut NodeList) -> Result<(), Error> {
+fn encounter_func(f: String, operands: &mut NodeList) -> Result<(), Error> {
     let mut args = Args::with_capacity(2);
 
     // ASSUMPTION: at least one argument per function
     args.push_front(operands
         .pop()
-        .ok_or_else(|| Error::NotEnoughFunctionParams(f.name.clone()))?);
+        .ok_or_else(|| Error::NotEnoughFunctionParams(f.clone()))?);
 
     while let Some(last) = operands.pop() {
         if last.token != Token::Comma {
@@ -35,7 +35,7 @@ fn encounter_func(f: Function, operands: &mut NodeList) -> Result<(), Error> {
         else {
             args.push_front(operands
                 .pop()
-                .ok_or_else(|| Error::FunctionSyntaxError(f.name.clone()))?);
+                .ok_or_else(|| Error::FunctionSyntaxError(f.clone()))?);
         }
     }
 
@@ -62,7 +62,6 @@ fn add_operator(
     operator: Operator,
     operands: &mut NodeList,
 ) -> Result<(), Error> {
-    let err = format!("{:?}", operator);
     let num_operands = operator.num_operands();
 
     let mut args: VecDeque<Node> =
@@ -71,7 +70,7 @@ fn add_operator(
     for _ in 0..num_operands {
         args.push_front(operands
             .pop()
-            .ok_or_else(|| Error::MissingOperands(err.clone()))?);
+            .ok_or_else(|| Error::MissingOperands(operator.to_string()))?);
     }
 
     Ok(operands.push(make_node(Token::Operator(operator), Some(args))))
@@ -119,26 +118,21 @@ fn parse_tokens<'a>(
     for token in tokens {
         debug!("TOKEN: {:?}", token);
         match token {
-            Token::Number(num) => {
-                operands.push(Node {
-                    token: Token::Number(num),
-                    args: None,
-                });
-                debug!("Add number to output");
-            },
+            Token::Number(num) => operands.push(Node {
+                token: Token::Number(num),
+                args: None,
+            }),
             Token::Variable(var) => operands.push(Node {
                 token: Token::Variable(var),
                 args: None,
             }),
             Token::RightParenthesis => {
-                right_paren(&mut operators, &mut operands)?;
+                right_paren(&mut operators, &mut operands)?
             },
             Token::LeftParenthesis => operators.push(token),
-
             Token::Operator(op1) => {
                 encounter_operator(op1, &mut operators, &mut operands)?;
             },
-
             Token::Function(f) => operators.push(Token::Function(f)),
             Token::Comma => operands.push(make_node(token, None)),
         };

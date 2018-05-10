@@ -1,12 +1,13 @@
-use tokens::{Function, Number, Operator, Variable};
+use ast::NumericLiteral;
+use tokens::Operator;
 
 #[derive(Debug, PartialEq)]
 pub enum Token {
     Operator(Operator),
-    Number(Number),
-    Variable(Variable),
+    Number(NumericLiteral),
+    Variable(String),
     LeftParenthesis,
     RightParenthesis,
     Comma,
-    Function(Function),
+    Function(String),
 }

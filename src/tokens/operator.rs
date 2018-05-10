@@ -15,7 +15,7 @@ pub enum Operator {
     Not,
 }
 
-impl fmt::Debug for Operator {
+impl fmt::Display for Operator {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
@@ -35,6 +35,12 @@ impl fmt::Debug for Operator {
                 Operator::Not => "!",
             }
         )
+    }
+}
+
+impl fmt::Debug for Operator {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self)
     }
 }
 
