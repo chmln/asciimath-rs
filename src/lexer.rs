@@ -98,7 +98,7 @@ fn parse_implicit(expr: &str, scope: &Scope) -> Result<TokenList, Error> {
     Ok(tokens)
 }
 
-fn get_token(ch: char) -> Option<Token> {
+fn get_token(ch: char, prev: char, t: &mut Vec<Token>) -> Option<Token> {
     match ch {
         '+' => Some(Token::Operator(Operator::Add)),
         '-' => Some(Token::Operator(Operator::Substract)),
@@ -107,7 +107,22 @@ fn get_token(ch: char) -> Option<Token> {
         '^' => Some(Token::Operator(Operator::Exponentiate)),
         '>' => Some(Token::Operator(Operator::IsGreaterThan)),
         '<' => Some(Token::Operator(Operator::IsLessThan)),
-        '=' => Some(Token::Operator(Operator::IsEqualTo)),
+        '=' => match prev {
+            '!' => {
+                t.pop();
+                Some(Token::Operator(Operator::IsNotEqualTo))
+            },
+            '>' => {
+                t.pop();
+                Some(Token::Operator(Operator::IsGreaterThanOrEqualTo))
+            },
+            '<' => {
+                t.pop();
+                Some(Token::Operator(Operator::IsLessThanOrEqualTo))
+            },
+            '=' => None,
+            _ => Some(Token::Operator(Operator::IsEqualTo)),
+        },
         '(' => Some(Token::LeftParenthesis),
         ')' => Some(Token::RightParenthesis),
         ',' => Some(Token::Comma),
@@ -123,6 +138,7 @@ pub fn tokenize<'a>(expr: &str, scope: &'a Scope) -> Result<TokenList, Error> {
 
     let mut tokens = Vec::with_capacity(len);
     let mut temp = String::new();
+    let mut prev = '\u{0}';
 
     while let Some(c) = chars.next() {
         if c.is_alphanumeric() || c == '_' || c == '.' {
@@ -135,7 +151,7 @@ pub fn tokenize<'a>(expr: &str, scope: &'a Scope) -> Result<TokenList, Error> {
         }
 
         let t_mut = &mut tokens;
-        let cur_token = get_token(c);
+        let cur_token = get_token(c, prev, t_mut);
 
         debug!("CUR: {:?}, TEMP: {}", cur_token, temp);
 
@@ -180,38 +196,13 @@ pub fn tokenize<'a>(expr: &str, scope: &'a Scope) -> Result<TokenList, Error> {
                 },
                 // not subtraction - proceed
                 _ => {
-                    if token == Token::Operator(Operator::IsEqualTo) {
-                        match t_mut.last() {
-                            Some(Token::Operator(Operator::IsGreaterThan)) => {
-                                t_mut.pop();
-                                t_mut.push(Token::Operator(
-                                    Operator::IsGreaterThanOrEqualTo,
-                                ));
-                            },
-                            Some(Token::Operator(Operator::IsLessThan)) => {
-                                t_mut.pop();
-                                t_mut.push(Token::Operator(
-                                    Operator::IsLessThanOrEqualTo,
-                                ));
-                            },
-                            Some(Token::Operator(Operator::Not)) => {
-                                t_mut.pop();
-                                t_mut.push(Token::Operator(
-                                    Operator::IsNotEqualTo,
-                                ));
-                            },
-                            Some(Token::Operator(Operator::IsEqualTo)) => {},
-                            _ => t_mut.push(token),
-                        }
-                    }
-                    else {
-                        t_mut.push(token);
-                    }
+                    t_mut.push(token);
                 },
             }
         }
 
         len -= 1;
+        prev = c;
     }
 
     debug!("Tokens: {:?}", tokens);
