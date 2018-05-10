@@ -29,6 +29,7 @@ fn comparison_operators() {
     assert_eq!(Ok(0.0), eval("x < x", &scope));
     assert_eq!(Ok(0.0), eval("x != x", &scope));
     assert_eq!(Ok(0.0), eval("!(x == x)", &scope));
+    assert_eq!(Ok(0.0), eval("!((x + 1) == 0)", &scope));
     assert_eq!(eval("x != x", &scope), eval("!(x == x)", &scope));
 }
 
