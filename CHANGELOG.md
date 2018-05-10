@@ -1,5 +1,43 @@
 # Changelog
 
+## 0.8.3
+
+### Internals
+
+- Turned one-field structs into enum fields, shedding ~80 loc
+- rustfmt tweaks
+
+## 0.8.2
+
+Remove unused imports.
+
+## 0.8.1
+
+### Internals
+
+Lexer:
+- Rewritten with peekable iterators
+- Simplifed further
+- Split tests into a separate file
+
+
+## 0.8.0
+
+### Added
+
+Seven new comparison operators:
+  - `>`
+  - `<`
+  - `!`
+  - `==`
+  - `!=`
+  - `>=`
+  - `<=`
+
+### Internals
+
+- Lexer - simplify parsing of operators with equality
+
 ## 0.7.1
 
 - Removed unused import
