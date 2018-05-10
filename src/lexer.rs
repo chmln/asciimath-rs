@@ -86,7 +86,18 @@ fn get_token(ch: Option<&char>, t: &mut Vec<Token>) -> Option<Token> {
     if let Some(ch) = ch {
         match ch {
             '+' => Some(Token::Operator(Operator::Add)),
-            '-' => Some(Token::Operator(Operator::Substract)),
+            '-' => match t.last() {
+                Some(Token::Comma)
+                | Some(Token::LeftParenthesis)
+                | Some(Token::Function(_))
+                | Some(Token::Operator(_))
+                | None => {
+                    t.push(Token::Number(Number::new(-1)));
+                    t.push(Token::Operator(Operator::Multiply));
+                    None
+                },
+                _ => Some(Token::Operator(Operator::Substract)),
+            },
             '*' => Some(Token::Operator(Operator::Multiply)),
             '/' => Some(Token::Operator(Operator::Divide)),
             '^' => Some(Token::Operator(Operator::Exponentiate)),
@@ -124,21 +135,15 @@ pub fn tokenize<'a>(expr: &str, scope: &'a Scope) -> Result<TokenList, Error> {
     let mut chars = expr.chars().peekable();
     let mut tokens = Vec::with_capacity(expr.len());
 
-    while let Some(&c) = chars.peek() {
+    while let Some(&_c) = chars.peek() {
         let temp = consume_while(&mut chars.by_ref(), |c| {
             c.is_alphanumeric() || c == '_' || c == '.'
         });
 
-        let cur_token = get_token(chars.peek(), &mut tokens);
-
-        debug!("CUR: {} = {:?}, TEMP: {}", c, cur_token, temp);
-
         if !temp.is_empty() {
-            if cur_token == Some(Token::LeftParenthesis)
-                && resolve_fn(&temp, scope).is_ok()
-            {
+            if chars.peek() == Some(&'(') && resolve_fn(&temp, scope).is_ok() {
                 tokens.push(Token::Function(Function::new(temp.clone())));
-                chars.next();
+                chars.by_ref().next();
                 continue;
             }
             else {
@@ -146,34 +151,14 @@ pub fn tokenize<'a>(expr: &str, scope: &'a Scope) -> Result<TokenList, Error> {
                     tokens.push(Token::Operator(Operator::Multiply));
                 }
                 tokens.append(&mut parse_implicit(&temp, scope)?);
-                if cur_token != Some(Token::LeftParenthesis) {
+                if chars.peek() != Some(&'(') {
                     tokens.pop();
                 }
             }
         }
-
-        if let Some(token) = cur_token {
-            match token {
-                // Negative numbers
-                Token::Operator(Operator::Substract) => match tokens.last() {
-                    Some(Token::Comma)
-                    | Some(Token::LeftParenthesis)
-                    | Some(Token::Function(_))
-                    | Some(Token::Operator(_))
-                    | None => {
-                        tokens.push(Token::Number(Number::new(-1)));
-                        tokens.push(Token::Operator(Operator::Multiply));
-                    },
-                    _ => {
-                        // just regular subtraction
-                        tokens.push(token);
-                    },
-                },
-                // not subtraction - proceed
-                _ => {
-                    tokens.push(token);
-                },
-            }
+        // debug!("CUR: {} = {:?}, TEMP: {}", c, cur_token, temp);
+        if let Some(token) = get_token(chars.peek(), &mut tokens) {
+            tokens.push(token);
         }
 
         chars.next();
@@ -197,7 +182,7 @@ fn lexer_negative_numbers() {
         Token::Operator(Operator::Multiply),
         Token::Number(Number::new(1.0)),
     ];
-    assert_eq!(tokens, expected_tokens)
+    assert_eq!(tokens, expected_tokens);
 }
 
 #[test]
