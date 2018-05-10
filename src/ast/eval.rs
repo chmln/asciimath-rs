@@ -119,6 +119,7 @@ impl<'a> Evaluate for Root<'a> {
     fn eval(&self) -> EvaluationResult {
         self.node.eval_with(self.scope)
     }
+
     fn eval_with(&self, scope: &Scope) -> EvaluationResult {
         self.node.eval_with(scope)
     }
