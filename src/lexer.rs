@@ -1,208 +1,182 @@
 use ast::{resolve_fn, resolve_var, NumericLiteral, Scope};
 use error::Error;
+use std::{iter::Peekable, str};
 use tokens::{Function, Number, Operator, Token, TokenList, Variable};
 
-fn resolve_vars(expr: &str, scope: &Scope) -> TokenList {
-    let mut tokens: TokenList = Vec::with_capacity(expr.len() * 2);
+fn consume_while<F>(it: &mut Peekable<str::Chars>, x: F) -> String
+where
+    F: Fn(char) -> bool,
+{
+    let mut s = String::with_capacity(5);
+
+    while let Some(&ch) = it.peek() {
+        if x(ch) {
+            it.next().unwrap();
+            s.push(ch);
+            continue;
+        }
+        break;
+    }
+    s
+}
+
+fn resolve_vars(expr: &str, scope: &Scope, mut tokens: &mut Vec<Token>) {
     let mut chars = expr.chars();
-    let mut temp = String::with_capacity(expr.len());
+    let ref mut var = String::new();
+    let mut is_valid_var = false;
+
+    let new_var = |name, t: &mut Vec<Token>| {
+        t.push(Token::Variable(Variable { name }));
+        t.push(Token::Operator(Operator::Multiply));
+    };
 
     loop {
-        let ch = chars.next();
-        match ch {
-            Some(ch) => {
-                if temp.is_empty() || resolve_var(&temp, scope).is_err() {
-                    temp.push(ch);
-                    continue;
-                }
-            },
-            _ => {
-                if temp.is_empty() {
-                    break;
-                }
-            },
+        if let Some(c) = chars.next() {
+            var.push(c);
+            is_valid_var = resolve_var(&var, scope).is_ok();
+            if !is_valid_var {
+                continue;
+            }
         }
 
-        if !temp.is_empty() {
-            if resolve_var(&temp, scope).is_ok() {
-                tokens.push(Token::Variable(Variable { name: temp.clone() }));
-                tokens.push(Token::Operator(Operator::Multiply));
-                if let Some(ch) = ch {
-                    temp = ch.to_string();
-                }
-                else {
-                    temp.clear();
-                }
+        if !var.is_empty() {
+            if is_valid_var {
+                new_var(var.clone(), &mut tokens);
             }
             else {
-                for c in temp.chars() {
-                    tokens.push(Token::Variable(Variable {
-                        name: c.to_string(),
-                    }));
-                    tokens.push(Token::Operator(Operator::Multiply));
+                for c in var.chars() {
+                    new_var(c.to_string(), &mut tokens);
                 }
-                break;
             }
-        }
-    }
 
-    tokens
+            var.clear();
+            continue;
+        }
+
+        break;
+    }
 }
 
 fn parse_implicit(expr: &str, scope: &Scope) -> Result<TokenList, Error> {
     let mut tokens: TokenList = Vec::with_capacity(expr.len() * 2);
-    let mut digits = String::new();
-    let mut word = String::new();
-    let mut chars_left = expr.len();
+    let mut chars = expr.chars().peekable();
 
-    for ch in expr.chars() {
-        if ch.is_digit(10) || ch == '.' {
-            if !word.is_empty() {
-                tokens.append(&mut resolve_vars(&word, scope));
-                word.clear();
-            }
-
-            digits.push(ch);
-            if chars_left > 1 {
-                chars_left -= 1;
-                continue;
-            }
+    while let Some(&ch) = chars.peek() {
+        let mut r = chars.by_ref();
+        match ch {
+            '0'...'9' => {
+                let num = consume_while(r, |n| n.is_digit(10) || n == '.');
+                let n = num.parse::<NumericLiteral>()
+                    .map_err(|_e| Error::InvalidToken(num))?;
+                tokens.push(Token::Number(Number::new(n)));
+                tokens.push(Token::Operator(Operator::Multiply));
+            },
+            'a'...'z' | 'A'...'Z' => {
+                let mut vars = consume_while(r, |c| c.is_alphabetic());
+                resolve_vars(&vars, scope, &mut tokens);
+                r.next();
+            },
+            _ => {},
         }
-
-        if !digits.is_empty() {
-            tokens.push(Token::Number(Number::new(digits
-                .parse::<NumericLiteral>()
-                .map_err(|_e| Error::InvalidToken(digits.clone()))?)));
-            tokens.push(Token::Operator(Operator::Multiply));
-
-            digits.clear();
-        }
-
-        if ch.is_alphabetic() {
-            word.push(ch);
-            if chars_left > 1 {
-                chars_left -= 1;
-                continue;
-            }
-        }
-
-        if !word.is_empty() {
-            tokens.append(&mut resolve_vars(&word, scope));
-
-            word.clear();
-        }
-
-        chars_left -= 1;
     }
-
     Ok(tokens)
 }
 
-fn get_token(ch: char, prev: char, t: &mut Vec<Token>) -> Option<Token> {
-    match ch {
-        '+' => Some(Token::Operator(Operator::Add)),
-        '-' => Some(Token::Operator(Operator::Substract)),
-        '*' => Some(Token::Operator(Operator::Multiply)),
-        '/' => Some(Token::Operator(Operator::Divide)),
-        '^' => Some(Token::Operator(Operator::Exponentiate)),
-        '>' => Some(Token::Operator(Operator::IsGreaterThan)),
-        '<' => Some(Token::Operator(Operator::IsLessThan)),
-        '=' => match prev {
-            '!' => {
-                t.pop();
-                Some(Token::Operator(Operator::IsNotEqualTo))
+fn get_token(ch: Option<&char>, t: &mut Vec<Token>) -> Option<Token> {
+    if let Some(ch) = ch {
+        match ch {
+            '+' => Some(Token::Operator(Operator::Add)),
+            '-' => Some(Token::Operator(Operator::Substract)),
+            '*' => Some(Token::Operator(Operator::Multiply)),
+            '/' => Some(Token::Operator(Operator::Divide)),
+            '^' => Some(Token::Operator(Operator::Exponentiate)),
+            '>' => Some(Token::Operator(Operator::IsGreaterThan)),
+            '<' => Some(Token::Operator(Operator::IsLessThan)),
+            '=' => match t.last() {
+                Some(Token::Operator(Operator::Not)) => {
+                    t.pop();
+                    Some(Token::Operator(Operator::IsNotEqualTo))
+                },
+                Some(Token::Operator(Operator::IsGreaterThan)) => {
+                    t.pop();
+                    Some(Token::Operator(Operator::IsGreaterThanOrEqualTo))
+                },
+                Some(Token::Operator(Operator::IsLessThan)) => {
+                    t.pop();
+                    Some(Token::Operator(Operator::IsLessThanOrEqualTo))
+                },
+                Some(Token::Operator(Operator::IsEqualTo)) => None,
+                _ => Some(Token::Operator(Operator::IsEqualTo)),
             },
-            '>' => {
-                t.pop();
-                Some(Token::Operator(Operator::IsGreaterThanOrEqualTo))
-            },
-            '<' => {
-                t.pop();
-                Some(Token::Operator(Operator::IsLessThanOrEqualTo))
-            },
-            '=' => None,
-            _ => Some(Token::Operator(Operator::IsEqualTo)),
-        },
-        '(' => Some(Token::LeftParenthesis),
-        ')' => Some(Token::RightParenthesis),
-        ',' => Some(Token::Comma),
-        '!' => Some(Token::Operator(Operator::Not)),
-        _ => None,
+            '(' => Some(Token::LeftParenthesis),
+            ')' => Some(Token::RightParenthesis),
+            ',' => Some(Token::Comma),
+            '!' => Some(Token::Operator(Operator::Not)),
+            _ => None,
+        }
+    }
+    else {
+        None
     }
 }
 
 pub fn tokenize<'a>(expr: &str, scope: &'a Scope) -> Result<TokenList, Error> {
-    let trimmed = expr.replace(" ", "");
-    let mut len = trimmed.len();
-    let mut chars = trimmed.chars();
+    let mut chars = expr.chars().peekable();
+    let mut tokens = Vec::with_capacity(expr.len());
 
-    let mut tokens = Vec::with_capacity(len);
-    let mut temp = String::new();
-    let mut prev = '\u{0}';
+    while let Some(&c) = chars.peek() {
+        let temp = consume_while(&mut chars.by_ref(), |c| {
+            c.is_alphanumeric() || c == '_' || c == '.'
+        });
 
-    while let Some(c) = chars.next() {
-        if c.is_alphanumeric() || c == '_' || c == '.' {
-            temp.push(c);
+        let cur_token = get_token(chars.peek(), &mut tokens);
 
-            if len > 1 {
-                len -= 1;
-                continue;
-            }
-        }
-
-        let t_mut = &mut tokens;
-        let cur_token = get_token(c, prev, t_mut);
-
-        debug!("CUR: {:?}, TEMP: {}", cur_token, temp);
+        debug!("CUR: {} = {:?}, TEMP: {}", c, cur_token, temp);
 
         if !temp.is_empty() {
             if cur_token == Some(Token::LeftParenthesis)
                 && resolve_fn(&temp, scope).is_ok()
             {
-                t_mut.push(Token::Function(Function::new(temp.clone())));
-                temp.clear();
-                len -= 1;
+                tokens.push(Token::Function(Function::new(temp.clone())));
+                chars.next();
                 continue;
             }
             else {
-                if t_mut.last() == Some(&Token::RightParenthesis) {
-                    t_mut.push(Token::Operator(Operator::Multiply));
+                if tokens.last() == Some(&Token::RightParenthesis) {
+                    tokens.push(Token::Operator(Operator::Multiply));
                 }
-                t_mut.append(&mut parse_implicit(&temp, scope)?);
+                tokens.append(&mut parse_implicit(&temp, scope)?);
                 if cur_token != Some(Token::LeftParenthesis) {
-                    t_mut.pop();
+                    tokens.pop();
                 }
             }
-
-            temp.clear();
         }
 
         if let Some(token) = cur_token {
             match token {
                 // Negative numbers
-                Token::Operator(Operator::Substract) => match t_mut.last() {
+                Token::Operator(Operator::Substract) => match tokens.last() {
                     Some(Token::Comma)
                     | Some(Token::LeftParenthesis)
                     | Some(Token::Function(_))
                     | Some(Token::Operator(_))
                     | None => {
-                        t_mut.push(Token::Number(Number::new(-1)));
-                        t_mut.push(Token::Operator(Operator::Multiply));
+                        tokens.push(Token::Number(Number::new(-1)));
+                        tokens.push(Token::Operator(Operator::Multiply));
                     },
                     _ => {
                         // just regular subtraction
-                        t_mut.push(token);
+                        tokens.push(token);
                     },
                 },
                 // not subtraction - proceed
                 _ => {
-                    t_mut.push(token);
+                    tokens.push(token);
                 },
             }
         }
 
-        len -= 1;
-        prev = c;
+        chars.next();
     }
 
     debug!("Tokens: {:?}", tokens);
@@ -248,17 +222,14 @@ fn test_resolve_vars() {
     };
 
     assert_eq!(
-        resolve_vars("abcd", &vars),
-        vec![
-            Token::Variable(Variable {
-                name: "abcd".to_string(),
-            }),
-            Token::Operator(Operator::Multiply),
-        ]
+        tokenize("abcd", &vars).unwrap(),
+        vec![Token::Variable(Variable {
+            name: "abcd".to_string(),
+        })]
     );
 
     assert_eq!(
-        resolve_vars("abcd", &vars_2),
+        tokenize("abcd", &vars_2).unwrap(),
         vec![
             Token::Variable(Variable {
                 name: "ab".to_string(),
@@ -267,12 +238,11 @@ fn test_resolve_vars() {
             Token::Variable(Variable {
                 name: "cd".to_string(),
             }),
-            Token::Operator(Operator::Multiply),
         ]
     );
 
     assert_eq!(
-        resolve_vars("abcd", &vars_3),
+        tokenize("abcd", &vars_3).unwrap(),
         vec![
             Token::Variable(Variable {
                 name: "abc".to_string(),
@@ -281,12 +251,11 @@ fn test_resolve_vars() {
             Token::Variable(Variable {
                 name: "d".to_string(),
             }),
-            Token::Operator(Operator::Multiply),
         ]
     );
 
     assert_eq!(
-        resolve_vars("abcd", &vars_4),
+        tokenize("abcd", &vars_4).unwrap(),
         vec![
             Token::Variable(Variable {
                 name: "a".to_string(),
@@ -295,12 +264,11 @@ fn test_resolve_vars() {
             Token::Variable(Variable {
                 name: "bcd".to_string(),
             }),
-            Token::Operator(Operator::Multiply),
         ]
     );
 
     assert_eq!(
-        resolve_vars("abcd", &scope!{}),
+        tokenize("abcd", &scope!{}).unwrap(),
         vec![
             Token::Variable(Variable {
                 name: "a".to_string(),
@@ -317,7 +285,6 @@ fn test_resolve_vars() {
             Token::Variable(Variable {
                 name: "d".to_string(),
             }),
-            Token::Operator(Operator::Multiply),
         ]
     );
 }
