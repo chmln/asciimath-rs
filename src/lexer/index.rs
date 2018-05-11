@@ -21,7 +21,7 @@ where
 
 fn resolve_vars(expr: &str, scope: &Scope, mut tokens: &mut Vec<Token>) {
     let mut chars = expr.chars();
-    let ref mut var = String::new();
+    let var = &mut String::new();
     let mut is_valid_var = false;
 
     let new_var = |name, t: &mut Vec<Token>| {
@@ -98,7 +98,7 @@ fn get_token(ch: Option<&char>, t: &mut Vec<Token>) -> Option<Token> {
                 | Some(Token::Function(_))
                 | Some(Token::Operator(_))
                 | None => {
-                    t.push(Token::Number(-1 as NumericLiteral));
+                    t.push(Token::Number(-1.0));
                     t.push(Token::Operator(Operator::Multiply));
                     None
                 },

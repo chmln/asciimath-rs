@@ -1,5 +1,5 @@
 use ast::{EvaluationResult, NumericLiteral};
-use std::collections::HashMap;
+use std::{collections::HashMap, f64};
 
 pub type Args = Vec<NumericLiteral>;
 pub type Func = fn(&Args) -> EvaluationResult;
@@ -14,8 +14,8 @@ lazy_static! {
         let cos  = |args: &Args| Ok(args[0].to_radians().cos());
         let tan  = |args: &Args| Ok(args[0].to_radians().tan());
 
-        let max =  |args: &Args| Ok(args.iter().fold(0. / 0., |acc: NumericLiteral, x| acc.max(*x)));
-        let min  =  |args: &Args| Ok(args.iter().fold(0. / 0., |acc: NumericLiteral, x| acc.min(*x)));
+        let max =  |args: &Args| Ok(args.iter().fold(f64::NAN, |acc: NumericLiteral, x| acc.max(*x)));
+        let min  =  |args: &Args| Ok(args.iter().fold(f64::NAN, |acc: NumericLiteral, x| acc.min(*x)));
         let abs  = |args: &Args| Ok(args[0].abs());
 
         let sqrt = |args: &Args| Ok(args[0].sqrt());

@@ -72,8 +72,8 @@ fn add_operator(
             .pop()
             .ok_or_else(|| Error::MissingOperands(operator.to_string()))?);
     }
-
-    Ok(operands.push(make_node(Token::Operator(operator), Some(args))))
+    operands.push(make_node(Token::Operator(operator), Some(args)));
+    Ok(())
 }
 
 fn encounter_operator(
@@ -108,10 +108,7 @@ fn encounter_operator(
     Ok(())
 }
 
-fn parse_tokens<'a>(
-    tokens: TokenList,
-    scope: &'a Scope,
-) -> Result<Root<'a>, Error> {
+fn parse_tokens(tokens: TokenList, scope: &Scope) -> Result<Root, Error> {
     let mut operators: TokenList = Vec::new();
     let mut operands: NodeList = Vec::new();
 

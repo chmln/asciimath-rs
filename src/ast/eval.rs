@@ -1,6 +1,6 @@
 use ast::{resolve_fn, resolve_var, Args, Node, Root, Scope};
 use error::Error;
-
+use std::f64::EPSILON;
 use tokens::{Operator, Token};
 
 pub type NumericLiteral = f64;
@@ -27,11 +27,20 @@ fn negate(n: f64) -> f64 {
     }
 }
 
+fn int(b: bool) -> f64 {
+    if b {
+        1.0
+    }
+    else {
+        0.0
+    }
+}
+
 pub fn eval_operator(
     operator: &Operator,
-    args: Vec<NumericLiteral>,
+    args: &[NumericLiteral],
 ) -> EvaluationResult {
-    let ref mut evaled_args = args.iter();
+    let evaled_args = &mut args.iter();
     let op_str = format!("{:?}", operator);
 
     match operator {
@@ -51,16 +60,14 @@ pub fn eval_operator(
                 .ok_or_else(|| Error::MissingOperands(op_str))?;
             Ok(evaled_args.fold(*base, |acc, v| acc.powf(*v)))
         },
-        Operator::IsGreaterThan => Ok(((args[0] > args[1]) as i8).into()),
-        Operator::IsLessThan => Ok(((args[0] < args[1]) as i8).into()),
-        Operator::IsGreaterThanOrEqualTo => {
-            Ok(((args[0] >= args[1]) as i8).into())
-        },
+        Operator::IsGreaterThan => Ok(int(args[0] > args[1])),
+        Operator::IsLessThan => Ok(int(args[0] < args[1])),
+        Operator::IsGreaterThanOrEqualTo => Ok(int(args[0] >= args[1])),
         Operator::IsLessThanOrEqualTo => {
             Ok(((args[0] <= args[1]) as i8).into())
         },
-        Operator::IsEqualTo => Ok(((args[0] == args[1]) as i8).into()),
-        Operator::IsNotEqualTo => Ok(((args[0] != args[1]) as i8).into()),
+        Operator::IsEqualTo => Ok(int((args[0] - args[1]).abs() < EPSILON)),
+        Operator::IsNotEqualTo => Ok(int((args[0] - args[1]).abs() > EPSILON)),
         Operator::Not => Ok(negate(args[0])),
     }
 }
@@ -91,7 +98,7 @@ impl Evaluate for Node {
                     .map(|node| node.eval_with(scope))
                     .collect::<Result<Vec<NumericLiteral>, Error>>()?;
 
-                eval_operator(&operator, args)
+                eval_operator(&operator, &args)
             },
             Token::Function(ref f) => {
                 resolve_fn(f, scope)?(&eval_args(&self.args, scope, f.clone())?)
@@ -100,7 +107,7 @@ impl Evaluate for Node {
             Token::Number(num) => Ok(num),
             Token::Variable(ref var) => {
                 if let Ok(value) = resolve_var(&var, scope) {
-                    return Ok(value.clone());
+                    return Ok(*value);
                 }
 
                 Err(Error::UnknownVariable(var.clone()))
@@ -110,8 +117,7 @@ impl Evaluate for Node {
     }
 
     fn eval(&self) -> EvaluationResult {
-        let empty_scope = Scope::new();
-        self.eval_with(&empty_scope)
+        self.eval_with(&Scope::new())
     }
 }
 

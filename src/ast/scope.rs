@@ -1,3 +1,4 @@
+#![allow(cast_lossless)]
 use ast::NumericLiteral;
 use constants::CustomFn;
 use std::{collections::HashMap, convert::Into};
@@ -26,6 +27,7 @@ impl From<CustomFn> for Variable {
     }
 }
 
+#[derive(Default)]
 pub struct Scope {
     variables: HashMap<String, Variable>,
 }
