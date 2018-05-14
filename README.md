@@ -5,8 +5,19 @@
 
 # asciimath-rs
 
-Simple, bare-bones, and efficient.
+Sample use:
+```rust
+#[macro_use] extern crate asciimath;
+use asciimath::{eval,CustomFn};
 
+let my_sum: CustomFn = |args| Ok(args.iter().sum());
+let scope = scope!{
+  "x" => -1,
+  "my_sum" => my_sum,
+};
+
+assert_eq!(Ok(260.0), eval("my_sum(1, ((1 - x) ^ 2 ^ 3), 3)", &scope));
+```
 ## Features
 
 - evaluation
