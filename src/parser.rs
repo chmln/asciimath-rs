@@ -4,10 +4,11 @@ use ast::{Args, Evaluate, EvaluationResult, Node, Root, Scope};
 use error::Error;
 use std::{collections::VecDeque, string::ToString};
 use tokens::{Operator, Token, TokenList};
+use util::consume_while;
 
 type NodeList = Vec<Node>;
 
-pub fn eval<'a>(expr: &'a str, scope: &'a Scope) -> EvaluationResult {
+pub fn eval(expr: &str, scope: &Scope) -> EvaluationResult {
     parse_tokens(tokenize(expr, scope)?, scope)?.eval()
 }
 
@@ -23,9 +24,11 @@ fn encounter_func(f: String, operands: &mut NodeList) -> Result<(), Error> {
     let mut args = Args::with_capacity(2);
 
     // ASSUMPTION: at least one argument per function
-    args.push_front(operands
-        .pop()
-        .ok_or_else(|| Error::NotEnoughFunctionParams(f.clone()))?);
+    args.push_front(
+        operands
+            .pop()
+            .ok_or_else(|| Error::NotEnoughFunctionParams(f.clone()))?,
+    );
 
     while let Some(last) = operands.pop() {
         if last.token != Token::Comma {
@@ -33,9 +36,11 @@ fn encounter_func(f: String, operands: &mut NodeList) -> Result<(), Error> {
             break;
         }
         else {
-            args.push_front(operands
-                .pop()
-                .ok_or_else(|| Error::FunctionSyntaxError(f.clone()))?);
+            args.push_front(
+                operands
+                    .pop()
+                    .ok_or_else(|| Error::FunctionSyntaxError(f.clone()))?,
+            );
         }
     }
 
@@ -68,9 +73,11 @@ fn add_operator(
         VecDeque::with_capacity(num_operands as usize);
 
     for _ in 0..num_operands {
-        args.push_front(operands
-            .pop()
-            .ok_or_else(|| Error::MissingOperands(operator.to_string()))?);
+        args.push_front(
+            operands
+                .pop()
+                .ok_or_else(|| Error::MissingOperands(operator.to_string()))?,
+        );
     }
     operands.push(make_node(Token::Operator(operator), Some(args)));
     Ok(())

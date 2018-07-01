@@ -12,15 +12,12 @@ pub fn resolve_fn<'a>(name: &str, scope: &'a Scope) -> Result<&'a Func, Error> {
     )
 }
 
-pub fn resolve_var<'a>(
-    name: &str,
-    scope: &'a Scope,
-) -> Result<&'a NumericLiteral, Error> {
+pub fn resolve_var(name: &str, scope: &Scope) -> Result<NumericLiteral, Error> {
     CONSTANTS.get(name).map_or_else(
         || match scope.get_var(name) {
-            Some(Variable::Number(n)) => Ok(n),
+            Some(Variable::Number(n)) => Ok(*n),
             _ => Err(Error::UnknownVariable(name.to_string())),
         },
-        |f| Ok(f),
+        |f| Ok(*f),
     )
 }

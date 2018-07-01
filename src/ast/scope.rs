@@ -1,4 +1,3 @@
-#![allow(cast_lossless)]
 use ast::NumericLiteral;
 use constants::CustomFn;
 use std::{collections::HashMap, convert::Into};

@@ -1,3 +1,4 @@
+#![feature(nll)]
 //! A mathematical expression parsing and evaluation library.
 //!
 //! # Evaluating an expression with variables
@@ -29,7 +30,7 @@
 //!
 //! ```
 //! #[macro_use] extern crate asciimath;
-//! use asciimath::{compile,Evaluate};
+//! use asciimath::{compile, Evaluate};
 //!
 //! let scope_one = scope!{
 //!    "x" => 8,
@@ -52,7 +53,7 @@
 //!
 //! ```
 //! #[macro_use] extern crate asciimath;
-//! use asciimath::{eval,CustomFn};
+//! use asciimath::{eval, CustomFn};
 //!
 //! let my_sum: CustomFn = |args| Ok(args.iter().sum());
 //!
@@ -61,7 +62,7 @@
 //!   "my_sum" => my_sum,
 //! };
 //!
-//! assert_eq!(Ok(6.0), eval("my_sum(x, 2, 3)",&scope));
+//! assert_eq!(Ok(6.0), eval("my_sum(x, 2, 3)", &scope));
 //! ```
 //!
 //! # Builtins
@@ -97,6 +98,7 @@ mod error;
 mod lexer;
 mod parser;
 mod tokens;
+mod util;
 
 pub use ast::{Evaluate, Scope};
 pub use constants::CustomFn;

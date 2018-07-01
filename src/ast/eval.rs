@@ -2,10 +2,11 @@ use ast::{resolve_fn, resolve_var, Args, Node, Root, Scope};
 use error::Error;
 use std::f64::EPSILON;
 use tokens::{Operator, Token};
+use util::Outcome;
 
 pub type NumericLiteral = f64;
 
-pub type EvaluationResult = Result<NumericLiteral, Error>;
+pub type EvaluationResult = Outcome<NumericLiteral>;
 
 pub trait Evaluate {
     /// Evaluates the node/expression with a given variable scope.
@@ -76,11 +77,9 @@ fn eval_args(
     args: &Option<Args>,
     scope: &Scope,
     fn_name: String,
-) -> Result<Vec<NumericLiteral>, Error> {
+) -> Outcome<Vec<NumericLiteral>> {
     if let Some(args) = args {
-        return args.into_iter()
-            .map(|n| n.eval_with(scope))
-            .collect::<Result<Vec<NumericLiteral>, _>>();
+        return args.iter().map(|n| n.eval_with(scope)).collect();
     }
     Err(Error::NotEnoughFunctionParams(fn_name))
 }
@@ -89,14 +88,15 @@ impl Evaluate for Node {
     fn eval_with(&self, scope: &Scope) -> EvaluationResult {
         match self.token {
             Token::Operator(ref operator) => {
-                let args = self.args
+                let args = self
+                    .args
                     .as_ref()
                     .ok_or_else(|| {
                         Error::MissingOperands(format!("{:?}", operator))
                     })?
-                    .into_iter()
+                    .iter()
                     .map(|node| node.eval_with(scope))
-                    .collect::<Result<Vec<NumericLiteral>, Error>>()?;
+                    .collect::<Outcome<Vec<NumericLiteral>>>()?;
 
                 eval_operator(&operator, &args)
             },
@@ -105,13 +105,7 @@ impl Evaluate for Node {
             },
 
             Token::Number(num) => Ok(num),
-            Token::Variable(ref var) => {
-                if let Ok(value) = resolve_var(&var, scope) {
-                    return Ok(*value);
-                }
-
-                Err(Error::UnknownVariable(var.clone()))
-            },
+            Token::Variable(ref var) => resolve_var(&var, scope),
             _ => Err(Error::CannotEvaluateToken(format!("{:?}", self.token))),
         }
     }

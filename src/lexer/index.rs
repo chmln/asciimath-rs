@@ -1,23 +1,7 @@
 use ast::{resolve_fn, resolve_var, NumericLiteral, Scope};
 use error::Error;
-use std::{iter::Peekable, str};
 use tokens::{Operator, Token, TokenList};
-
-fn consume_while<F>(it: &mut Peekable<str::Chars>, x: F) -> String
-where
-    F: Fn(char) -> bool,
-{
-    let mut s = String::with_capacity(5);
-    while let Some(&ch) = it.peek() {
-        if x(ch) {
-            it.next().unwrap();
-            s.push(ch);
-            continue;
-        }
-        break;
-    }
-    s
-}
+use util::consume_while;
 
 fn resolve_vars(expr: &str, scope: &Scope, mut tokens: &mut Vec<Token>) {
     let mut chars = expr.chars();
@@ -72,7 +56,8 @@ fn parse_implicit(
                 let num = consume_while(chars.by_ref(), |n| {
                     n.is_digit(10) || n == '.'
                 });
-                let n = num.parse::<NumericLiteral>()
+                let n = num
+                    .parse::<NumericLiteral>()
                     .map_err(|_e| Error::InvalidToken(num))?;
                 tokens.push(Token::Number(n));
                 tokens.push(Token::Operator(Operator::Multiply));
