@@ -10,13 +10,13 @@ jobs:
       - restore_cache:
           key: project-cache
 
-      - run:
-          name: Nightly Build
-          command: |
-            rustup install nightly
-            rustup run nightly rustc --version --verbose
-            rustup run nightly cargo --version --verbose
-            rustup run nightly cargo build
+      # - run:
+      #     name: Nightly Build
+      #     command: |
+      #       rustup install nightly
+      #       rustup run nightly rustc --version --verbose
+      #       rustup run nightly cargo --version --verbose
+      #       rustup run nightly cargo build
 
       - run:
           name: Test
