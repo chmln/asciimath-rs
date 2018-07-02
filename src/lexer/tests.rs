@@ -106,7 +106,7 @@ mod test {
 
     #[test]
     fn test_implicit_multiplication() {
-        let mut scope = scope!{ "x" => 0 };
+        let scope = scope!{ "x" => 0 };
 
         assert_eq!(
             tokenize("1", &Scope::new()).unwrap(),

@@ -1,5 +1,5 @@
 extern crate asciimath;
-use self::asciimath::{compile, eval, CustomFn, Error, Evaluate, Scope};
+use self::asciimath::{eval, CustomFn, Error, Scope};
 use std::f64;
 
 #[test]
