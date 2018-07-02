@@ -1,4 +1,3 @@
-#![feature(nll)]
 //! A mathematical expression parsing and evaluation library.
 //!
 //! # Evaluating an expression with variables

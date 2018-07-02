@@ -4,7 +4,6 @@ use ast::{Args, Evaluate, EvaluationResult, Node, Root, Scope};
 use error::Error;
 use std::{collections::VecDeque, string::ToString};
 use tokens::{Operator, Token, TokenList};
-use util::consume_while;
 
 type NodeList = Vec<Node>;
 
