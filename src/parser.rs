@@ -1,9 +1,8 @@
-use lexer::tokenize;
-
-use ast::{Args, Evaluate, EvaluationResult, Node, Root, Scope};
-use error::Error;
+use crate::lexer::tokenize;
+use crate::ast::{Args, Evaluate, EvaluationResult, Node, Root, Scope};
+use crate::error::Error;
 use std::{collections::VecDeque, string::ToString};
-use tokens::{Operator, Token, TokenList};
+use crate::tokens::{Operator, Token, TokenList};
 
 type NodeList = Vec<Node>;
 

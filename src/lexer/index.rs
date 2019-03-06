@@ -1,7 +1,7 @@
-use ast::{resolve_fn, resolve_var, NumericLiteral, Scope};
-use error::Error;
-use tokens::{Operator, Token, TokenList};
-use util::consume_while;
+use crate::ast::{resolve_fn, resolve_var, NumericLiteral, Scope};
+use crate::error::Error;
+use crate::tokens::{Operator, Token, TokenList};
+use crate::util::consume_while;
 
 fn resolve_vars(expr: &str, scope: &Scope, mut tokens: &mut Vec<Token>) {
     let mut chars = expr.chars();
@@ -63,7 +63,7 @@ fn parse_implicit(
                 tokens.push(Token::Operator(Operator::Multiply));
             },
             'a'...'z' | 'A'...'Z' => {
-                let mut vars = consume_while(&mut chars, |c| c.is_alphabetic());
+                let vars = consume_while(&mut chars, |c| c.is_alphabetic());
                 resolve_vars(&vars, scope, tokens);
                 chars.by_ref().next();
             },

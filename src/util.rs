@@ -1,4 +1,4 @@
-use error::Error;
+use crate::error::Error;
 use std::{iter::Peekable, str};
 
 pub type Outcome<T> = Result<T, Error>;

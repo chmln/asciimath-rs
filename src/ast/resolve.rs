@@ -1,6 +1,6 @@
-use ast::{NumericLiteral, Scope, Variable};
-use constants::{Func, CONSTANTS, FUNCTIONS};
-use error::Error;
+use crate::ast::{NumericLiteral, Scope, Variable};
+use crate::constants::{Func, CONSTANTS, FUNCTIONS};
+use crate::error::Error;
 
 pub fn resolve_fn<'a>(name: &str, scope: &'a Scope) -> Result<&'a Func, Error> {
     FUNCTIONS.get(name).map_or_else(

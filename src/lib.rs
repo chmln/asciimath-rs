@@ -6,8 +6,7 @@
 //! once, with a given a set of variables.
 //!
 //! ```
-//! #[macro_use] extern crate asciimath;
-//! use asciimath::eval;
+//! use asciimath::{eval, scope};
 //!
 //! let expression = "(x + y * 4) ^ 3";
 //! let variables = scope!{
@@ -28,8 +27,7 @@
 //! implicit multiplication and function calls.
 //!
 //! ```
-//! #[macro_use] extern crate asciimath;
-//! use asciimath::{compile, Evaluate};
+//! use asciimath::{compile, scope, Evaluate};
 //!
 //! let scope_one = scope!{
 //!    "x" => 8,
@@ -51,8 +49,7 @@
 //! as possible.
 //!
 //! ```
-//! #[macro_use] extern crate asciimath;
-//! use asciimath::{eval, CustomFn};
+//! use asciimath::{eval, scope, CustomFn};
 //!
 //! let my_sum: CustomFn = |args| Ok(args.iter().sum());
 //!
@@ -86,20 +83,18 @@
 //! - INFINITY
 //! - NEG_INFINITY
 
-#[macro_use]
-extern crate lazy_static;
 
 #[macro_use]
 mod macros;
 mod ast;
-mod constants;
+pub(crate) mod constants;
 mod error;
 mod lexer;
 mod parser;
 mod tokens;
 mod util;
 
-pub use ast::{Evaluate, Scope};
-pub use constants::CustomFn;
-pub use error::Error;
-pub use parser::{compile, eval};
+pub use crate::ast::{Evaluate, Scope};
+pub use crate::constants::CustomFn;
+pub use crate::error::Error;
+pub use crate::parser::{compile, eval};

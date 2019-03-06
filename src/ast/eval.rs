@@ -1,8 +1,8 @@
-use ast::{resolve_fn, resolve_var, Args, Node, Root, Scope};
-use error::Error;
+use crate::ast::{resolve_fn, resolve_var, Args, Node, Root, Scope};
+use crate::error::Error;
 use std::f64::EPSILON;
-use tokens::{Operator, Token};
-use util::Outcome;
+use crate::tokens::{Operator, Token};
+use crate::util::Outcome;
 
 pub type NumericLiteral = f64;
 

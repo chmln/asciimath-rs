@@ -1,8 +1,8 @@
 #[allow(unused_imports)]
 mod test {
-    use ast::Scope;
-    use lexer::tokenize;
-    use tokens::{Operator, Token};
+    use crate::ast::Scope;
+    use crate::lexer::tokenize;
+    use crate::tokens::{Operator, Token};
     #[test]
     fn lexer_negative_numbers() {
         let tokens = tokenize("x+-1", &Scope::new()).unwrap();

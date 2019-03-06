@@ -1,5 +1,6 @@
-use ast::{EvaluationResult, NumericLiteral};
+use crate::ast::{EvaluationResult, NumericLiteral};
 use std::{collections::HashMap, f64};
+use lazy_static::lazy_static;
 
 pub type Args = Vec<NumericLiteral>;
 pub type Func = fn(&Args) -> EvaluationResult;

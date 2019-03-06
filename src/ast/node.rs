@@ -1,6 +1,6 @@
-use ast::Scope;
+use crate::ast::Scope;
 use std::{collections::VecDeque, fmt};
-use tokens::Token;
+use crate::tokens::Token;
 
 pub type Args = VecDeque<Node>;
 
