@@ -1,7 +1,7 @@
 [package]
 name = "asciimath"
 edition = "2018"
-version = "0.8.6"
+version = "0.8.7"
 authors = ["Gregory <gregory.mkv@gmail.com>"]
 description = "Mathematical expression parser and evaluator"
 keywords = ["math", "expression", "evaluation", "parser"]
