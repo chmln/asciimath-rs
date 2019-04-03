@@ -7,8 +7,7 @@
 
 Sample use:
 ```rust
-#[macro_use] extern crate asciimath;
-use asciimath::{eval,CustomFn};
+use asciimath::{eval, scope, CustomFn};
 
 let my_sum: CustomFn = |args| Ok(args.iter().sum());
 let scope = scope!{
@@ -44,7 +43,7 @@ Extensive testing and maximum precision must be a part of all the modules to pre
 
 ## Future
 
-The items below will be considered after ABI stabilization:
+The items below will be considered after stabilization:
 
 - Non-mathematical expressions, like strings
 - More operators (e.g. ternary ? : )
@@ -61,4 +60,4 @@ While some great libraries aiming for similar goals do exist, they wouldn't rewa
 
 ## Implementation
 
-The parser is loosely based on Dijkstra's "shunting yard" algorithm for converting infix expressions into postfix expressions. However, instead of going from infix to postfix strings, we parse the expression straight into an Abstract Syntax Tree. 
+The parser is loosely based on Dijkstra's "shunting yard" algorithm for converting infix expressions into postfix expressions. However, instead of going from infix to postfix strings, we parse the expression straight into an Abstract Syntax Tree.
