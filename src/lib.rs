@@ -83,12 +83,12 @@
 //! - INFINITY
 //! - NEG_INFINITY
 
-#[macro_use]
-mod macros;
 mod ast;
 pub(crate) mod constants;
 mod error;
 mod lexer;
+#[macro_use]
+mod macros;
 mod parser;
 mod tokens;
 mod util;
