@@ -1,6 +1,6 @@
 use crate::ast::NumericLiteral;
-use std::{collections::HashMap, f64};
 use lazy_static::lazy_static;
+use std::{collections::HashMap, f64};
 
 lazy_static! {
     pub static ref CONSTANTS: HashMap<&'static str, NumericLiteral> = {

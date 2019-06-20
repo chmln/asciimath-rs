@@ -1,8 +1,10 @@
-use crate::lexer::tokenize;
-use crate::ast::{Args, Evaluate, EvaluationResult, Node, Root, Scope};
-use crate::error::Error;
+use crate::{
+    ast::{Args, Evaluate, EvaluationResult, Node, Root, Scope},
+    error::Error,
+    lexer::tokenize,
+    tokens::{Operator, Token, TokenList},
+};
 use std::{collections::VecDeque, string::ToString};
-use crate::tokens::{Operator, Token, TokenList};
 
 type NodeList = Vec<Node>;
 
@@ -12,10 +14,6 @@ pub fn eval(expr: &str, scope: &Scope) -> EvaluationResult {
 
 pub fn compile<'a>(expr: &'a str, scope: &'a Scope) -> Result<Root<'a>, Error> {
     parse_tokens(tokenize(expr, scope)?, scope)
-}
-
-fn make_node(token: Token, args: Option<Args>) -> Node {
-    Node { token, args }
 }
 
 fn encounter_func(f: String, operands: &mut NodeList) -> Result<(), Error> {
@@ -42,7 +40,7 @@ fn encounter_func(f: String, operands: &mut NodeList) -> Result<(), Error> {
         }
     }
 
-    operands.push(make_node(Token::Function(f), Some(args)));
+    operands.push(Node::new(Token::Function(f), Some(args)));
     Ok(())
 }
 
@@ -52,7 +50,10 @@ fn right_paren(
 ) -> Result<(), Error> {
     while let Some(top) = operators.pop() {
         match top {
-            Token::LeftParenthesis => break,
+            Token::LeftParenthesis => match operators.last() {
+                Some(Token::Function(_)) => {},
+                _ => break,
+            },
             Token::Function(f) => encounter_func(f, operands)?,
             Token::Operator(op) => add_operator(op, operands)?,
             _ => {},
@@ -77,7 +78,7 @@ fn add_operator(
                 .ok_or_else(|| Error::MissingOperands(operator.to_string()))?,
         );
     }
-    operands.push(make_node(Token::Operator(operator), Some(args)));
+    operands.push(Node::new(Token::Operator(operator), Some(args)));
     Ok(())
 }
 
@@ -108,7 +109,6 @@ fn encounter_operator(
         }
     }
 
-    debug!("Push op to stack: {:?}", cur_operator);
     operators.push(Token::Operator(cur_operator));
     Ok(())
 }
@@ -118,7 +118,6 @@ fn parse_tokens(tokens: TokenList, scope: &Scope) -> Result<Root, Error> {
     let mut operands: NodeList = Vec::new();
 
     for token in tokens {
-        debug!("TOKEN: {:?}", token);
         match token {
             Token::Number(num) => operands.push(Node {
                 token: Token::Number(num),
@@ -136,11 +135,8 @@ fn parse_tokens(tokens: TokenList, scope: &Scope) -> Result<Root, Error> {
                 encounter_operator(op1, &mut operators, &mut operands)?;
             },
             Token::Function(f) => operators.push(Token::Function(f)),
-            Token::Comma => operands.push(make_node(token, None)),
+            Token::Comma => operands.push(Node::new(token, None)),
         };
-        debug!("stack: {:?}", operators);
-        debug!("output: {:?}", operands);
-        debug!("----------");
     }
 
     while let Some(Token::Operator(operator)) = operators.pop() {

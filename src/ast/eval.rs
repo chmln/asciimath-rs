@@ -1,16 +1,17 @@
-use crate::ast::{resolve_fn, resolve_var, Args, Node, Root, Scope};
-use crate::error::Error;
+use crate::{
+    ast::{resolve_fn, resolve_var, Args, Node, Root, Scope},
+    error::Error,
+    tokens::{Operator, Token},
+    util::Result,
+};
 use std::f64::EPSILON;
-use crate::tokens::{Operator, Token};
-use crate::util::Outcome;
 
 pub type NumericLiteral = f64;
 
-pub type EvaluationResult = Outcome<NumericLiteral>;
+pub type EvaluationResult = Result<NumericLiteral>;
 
 pub trait Evaluate {
     /// Evaluates the node/expression with a given variable scope.
-    ///
     fn eval_with(&self, scope: &Scope) -> EvaluationResult;
 
     /// Evaluates the node/expression without any variables.
@@ -77,7 +78,7 @@ fn eval_args(
     args: &Option<Args>,
     scope: &Scope,
     fn_name: String,
-) -> Outcome<Vec<NumericLiteral>> {
+) -> Result<Vec<NumericLiteral>> {
     if let Some(args) = args {
         return args.iter().map(|n| n.eval_with(scope)).collect();
     }
@@ -88,6 +89,7 @@ impl Evaluate for Node {
     fn eval_with(&self, scope: &Scope) -> EvaluationResult {
         match self.token {
             Token::Operator(ref operator) => {
+                dbg!(&self.args);
                 let args = self
                     .args
                     .as_ref()
@@ -96,12 +98,15 @@ impl Evaluate for Node {
                     })?
                     .iter()
                     .map(|node| node.eval_with(scope))
-                    .collect::<Outcome<Vec<NumericLiteral>>>()?;
+                    .collect::<Result<Vec<NumericLiteral>>>()?;
 
-                eval_operator(&operator, &args)
+                dbg!(&args);
+                let res = eval_operator(&operator, &args);
+                dbg!(res)
             },
             Token::Function(ref f) => {
-                resolve_fn(f, scope)?(&eval_args(&self.args, scope, f.clone())?)
+                let args = eval_args(&self.args, scope, f.clone())?;
+                resolve_fn(f, scope)?(&args)
             },
 
             Token::Number(num) => Ok(num),

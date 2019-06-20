@@ -1,5 +1,4 @@
-use crate::ast::NumericLiteral;
-use crate::tokens::Operator;
+use crate::{ast::NumericLiteral, tokens::Operator};
 
 #[derive(Debug, PartialEq)]
 pub enum Token {

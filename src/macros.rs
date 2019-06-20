@@ -1,7 +1,8 @@
+#[allow(unused)]
 macro_rules! debug {
     ($( $args:expr ),*) => {
         if cfg!(debug_assertions) {
-            println!( $( $args ),* );
+            dbg!( $( $args ),* );
         }
     }
 }

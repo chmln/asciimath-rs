@@ -1,12 +1,17 @@
-use crate::ast::Scope;
+use crate::{ast::Scope, tokens::Token};
 use std::{collections::VecDeque, fmt};
-use crate::tokens::Token;
 
 pub type Args = VecDeque<Node>;
 
 pub struct Node {
     pub token: Token,
     pub args: Option<Args>,
+}
+
+impl Node {
+    pub(crate) fn new(token: Token, args: Option<Args>) -> Self {
+        Self { token, args }
+    }
 }
 
 pub struct Root<'a> {

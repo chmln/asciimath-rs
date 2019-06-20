@@ -115,6 +115,14 @@ fn neg_numbers() {
 }
 
 #[test]
+fn neg_fn() {
+    let mut scope = Scope::new();
+    scope.set_var("x", -5);
+    assert_eq!(Ok(5.0), eval("abs(x)", &scope));
+    assert_eq!(Ok(4.0), eval("abs(x + 1)", &scope));
+}
+
+#[test]
 fn func_not_enough_args() {
     assert_eq!(
         Err(Error::NotEnoughFunctionParams("max".to_string())),

@@ -9,7 +9,7 @@
 //! use asciimath::{eval, scope};
 //!
 //! let expression = "(x + y * 4) ^ 3";
-//! let variables = scope!{
+//! let variables = scope! {
 //!    "x" => 8,
 //!    "y" => 12.25
 //! };
@@ -29,11 +29,11 @@
 //! ```
 //! use asciimath::{compile, scope, Evaluate};
 //!
-//! let scope_one = scope!{
+//! let scope_one = scope! {
 //!    "x" => 8,
 //!    "y" => 12.25
 //! };
-//! let scope_two = scope!{
+//! let scope_two = scope! {
 //!    "x" => 3,
 //!    "y" => 0
 //! };
@@ -53,7 +53,7 @@
 //!
 //! let my_sum: CustomFn = |args| Ok(args.iter().sum());
 //!
-//! let scope = scope!{
+//! let scope = scope! {
 //!   "x" => 1,
 //!   "my_sum" => my_sum,
 //! };
@@ -83,7 +83,6 @@
 //! - INFINITY
 //! - NEG_INFINITY
 
-
 #[macro_use]
 mod macros;
 mod ast;
@@ -94,7 +93,9 @@ mod parser;
 mod tokens;
 mod util;
 
-pub use crate::ast::{Evaluate, Scope};
-pub use crate::constants::CustomFn;
-pub use crate::error::Error;
-pub use crate::parser::{compile, eval};
+pub use crate::{
+    ast::{Evaluate, Scope},
+    constants::CustomFn,
+    error::Error,
+    parser::{compile, eval},
+};

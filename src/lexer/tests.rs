@@ -1,8 +1,10 @@
 #[allow(unused_imports)]
 mod test {
-    use crate::ast::Scope;
-    use crate::lexer::tokenize;
-    use crate::tokens::{Operator, Token};
+    use crate::{
+        ast::Scope,
+        lexer::tokenize,
+        tokens::{Operator, Token},
+    };
     #[test]
     fn lexer_negative_numbers() {
         let tokens = tokenize("x+-1", &Scope::new()).unwrap();
@@ -18,21 +20,21 @@ mod test {
 
     #[test]
     fn test_resolve_vars() {
-        let vars = scope!{
+        let vars = scope! {
             "abcd" => 1
         };
 
-        let vars_2 = scope!{
+        let vars_2 = scope! {
             "ab" => 2,
             "cd" => 3
         };
 
-        let vars_3 = scope!{
+        let vars_3 = scope! {
             "abc" => 2,
             "d" => 3
         };
 
-        let vars_4 = scope!{
+        let vars_4 = scope! {
             "a" => 2,
             "bcd" => 3
         };
@@ -70,7 +72,7 @@ mod test {
         );
 
         assert_eq!(
-            tokenize("abcd", &scope!{}).unwrap(),
+            tokenize("abcd", &scope! {}).unwrap(),
             vec![
                 Token::Variable("a".to_string()),
                 Token::Operator(Operator::Multiply),
@@ -86,7 +88,7 @@ mod test {
     #[test]
     fn lexer_word_variables() {
         assert_eq!(
-            tokenize("quantity*2", &scope!{ "quantity" => 1 }),
+            tokenize("quantity*2", &scope! { "quantity" => 1 }),
             Ok(vec![
                 Token::Variable("quantity".to_string()),
                 Token::Operator(Operator::Multiply),
@@ -95,7 +97,7 @@ mod test {
         );
 
         assert_eq!(
-            tokenize("2quantity", &scope!{ "quantity" => 1 }),
+            tokenize("2quantity", &scope! { "quantity" => 1 }),
             Ok(vec![
                 Token::Number(2.0),
                 Token::Operator(Operator::Multiply),
@@ -106,7 +108,7 @@ mod test {
 
     #[test]
     fn test_implicit_multiplication() {
-        let scope = scope!{ "x" => 0 };
+        let scope = scope! { "x" => 0 };
 
         assert_eq!(
             tokenize("1", &Scope::new()).unwrap(),
@@ -174,6 +176,7 @@ mod test {
         let tokens = tokenize("max(1,3,25.75,10.5)", &Scope::new()).unwrap();
         let expected_tokens = vec![
             Token::Function("max".to_string()),
+            Token::LeftParenthesis,
             Token::Number(1.0),
             Token::Comma,
             Token::Number(3.0),
@@ -181,6 +184,20 @@ mod test {
             Token::Number(25.75),
             Token::Comma,
             Token::Number(10.5),
+            Token::RightParenthesis,
+        ];
+        assert_eq!(tokens, expected_tokens)
+    }
+
+    #[test]
+    fn func_args() {
+        let tokens = tokenize("abs(x+1)", &Scope::new()).unwrap();
+        let expected_tokens = vec![
+            Token::Function("abs".to_string()),
+            Token::LeftParenthesis,
+            Token::Variable("x".into()),
+            Token::Operator(Operator::Add),
+            Token::Number(1.0),
             Token::RightParenthesis,
         ];
         assert_eq!(tokens, expected_tokens)
