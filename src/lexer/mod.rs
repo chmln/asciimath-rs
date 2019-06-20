@@ -7,7 +7,7 @@ use crate::{
 
 fn resolve_vars(expr: &str, scope: &Scope, mut tokens: &mut Vec<Token>) {
     let mut chars = expr.chars();
-    let var = &mut String::new();
+    let mut var = String::new();
     let mut is_valid_var = false;
 
     let new_var = |name, t: &mut Vec<Token>| {

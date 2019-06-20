@@ -47,19 +47,18 @@ pub fn eval_operator(
 
     match operator {
         Operator::Add => Ok(evaled_args.sum()),
-        Operator::Substract => Ok(evaled_args
-            .nth(0)
-            .ok_or_else(|| Error::MissingOperands(op_str))?
-            - evaled_args.sum::<NumericLiteral>()),
+        Operator::Substract => {
+            Ok(evaled_args.nth(0).ok_or(Error::MissingOperands(op_str))?
+                - evaled_args.sum::<NumericLiteral>())
+        },
         Operator::Multiply => Ok(evaled_args.product()),
-        Operator::Divide => Ok(evaled_args
-            .nth(0)
-            .ok_or_else(|| Error::MissingOperands(op_str))?
-            / evaled_args.product::<NumericLiteral>()),
+        Operator::Divide => {
+            Ok(evaled_args.nth(0).ok_or(Error::MissingOperands(op_str))?
+                / evaled_args.product::<NumericLiteral>())
+        },
         Operator::Exponentiate => {
-            let base = evaled_args
-                .nth(0)
-                .ok_or_else(|| Error::MissingOperands(op_str))?;
+            let base =
+                evaled_args.nth(0).ok_or(Error::MissingOperands(op_str))?;
             Ok(evaled_args.fold(*base, |acc, v| acc.powf(*v)))
         },
         Operator::IsGreaterThan => Ok(int(args[0] > args[1])),
@@ -93,9 +92,7 @@ impl Evaluate for Node {
                 let args = self
                     .args
                     .as_ref()
-                    .ok_or_else(|| {
-                        Error::MissingOperands(format!("{:?}", operator))
-                    })?
+                    .ok_or(Error::MissingOperands(format!("{:?}", operator)))?
                     .iter()
                     .map(|node| node.eval_with(scope))
                     .collect::<Result<Vec<NumericLiteral>>>()?;

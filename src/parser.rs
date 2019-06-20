@@ -23,7 +23,7 @@ fn encounter_func(f: String, operands: &mut NodeList) -> Result<(), Error> {
     args.push_front(
         operands
             .pop()
-            .ok_or_else(|| Error::NotEnoughFunctionParams(f.clone()))?,
+            .ok_or(Error::NotEnoughFunctionParams(f.clone()))?,
     );
 
     while let Some(last) = operands.pop() {
@@ -35,7 +35,7 @@ fn encounter_func(f: String, operands: &mut NodeList) -> Result<(), Error> {
             args.push_front(
                 operands
                     .pop()
-                    .ok_or_else(|| Error::FunctionSyntaxError(f.clone()))?,
+                    .ok_or(Error::FunctionSyntaxError(f.clone()))?,
             );
         }
     }
@@ -75,7 +75,7 @@ fn add_operator(
         args.push_front(
             operands
                 .pop()
-                .ok_or_else(|| Error::MissingOperands(operator.to_string()))?,
+                .ok_or(Error::MissingOperands(operator.to_string()))?,
         );
     }
     operands.push(Node::new(Token::Operator(operator), Some(args)));
