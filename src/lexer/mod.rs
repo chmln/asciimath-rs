@@ -54,7 +54,7 @@ fn parse_implicit(
 
     while let Some(&ch) = chars.peek() {
         match ch {
-            '0'...'9' => {
+            '0'..='9' => {
                 let num = consume_while(chars.by_ref(), |n| {
                     n.is_digit(10) || n == '.'
                 });
@@ -64,7 +64,7 @@ fn parse_implicit(
                 tokens.push(Token::Number(n));
                 tokens.push(Token::Operator(Operator::Multiply));
             },
-            'a'...'z' | 'A'...'Z' => {
+            'a'..='z' | 'A'..='Z' => {
                 let vars = consume_while(&mut chars, |c| c.is_alphabetic());
                 resolve_vars(&vars, scope, tokens);
                 chars.by_ref().next();
@@ -125,7 +125,6 @@ fn get_token(ch: Option<&char>, t: &mut Vec<Token>) -> Option<Token> {
 }
 
 pub fn tokenize<'a>(expr: &str, scope: &'a Scope) -> Result<TokenList, Error> {
-    dbg!(expr);
     let mut chars = expr.chars().peekable();
     let mut tokens = Vec::with_capacity(expr.len());
 

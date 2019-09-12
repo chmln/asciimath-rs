@@ -88,7 +88,7 @@ impl Evaluate for Node {
     fn eval_with(&self, scope: &Scope) -> EvaluationResult {
         match self.token {
             Token::Operator(ref operator) => {
-                dbg!(&self.args);
+                //dbg!(&self.args);
                 let args = self
                     .args
                     .as_ref()
@@ -97,9 +97,7 @@ impl Evaluate for Node {
                     .map(|node| node.eval_with(scope))
                     .collect::<Result<Vec<NumericLiteral>>>()?;
 
-                dbg!(&args);
-                let res = eval_operator(&operator, &args);
-                dbg!(res)
+                eval_operator(&operator, &args)
             },
             Token::Function(ref f) => {
                 let args = eval_args(&self.args, scope, f.clone())?;
