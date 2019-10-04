@@ -87,7 +87,6 @@ mod ast;
 pub(crate) mod constants;
 mod error;
 mod lexer;
-#[macro_use]
 mod macros;
 mod parser;
 mod tokens;

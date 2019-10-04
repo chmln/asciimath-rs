@@ -1,12 +1,3 @@
-#[allow(unused)]
-macro_rules! debug {
-    ($( $args:expr ),*) => {
-        if cfg!(debug_assertions) {
-            dbg!( $( $args ),* );
-        }
-    }
-}
-
 // Thank you, https://github.com/bluss
 #[macro_export]
 macro_rules! scope {
