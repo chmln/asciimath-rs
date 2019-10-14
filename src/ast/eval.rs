@@ -88,7 +88,6 @@ impl Evaluate for Node {
     fn eval_with(&self, scope: &Scope) -> EvaluationResult {
         match self.token {
             Token::Operator(ref operator) => {
-                //dbg!(&self.args);
                 let args = self
                     .args
                     .as_ref()
