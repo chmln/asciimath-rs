@@ -2,11 +2,11 @@ mod functions;
 pub use self::functions::{Args, CustomFn, Func, FUNCTIONS};
 
 use crate::ast::NumericLiteral;
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use std::{collections::HashMap, f64};
 
-lazy_static! {
-    pub static ref CONSTANTS: HashMap<&'static str, NumericLiteral> = {
+pub static CONSTANTS: Lazy<HashMap<&'static str, NumericLiteral>> =
+    Lazy::new(|| {
         let mut m = HashMap::with_capacity(5);
 
         // comparison
@@ -16,5 +16,4 @@ lazy_static! {
         m.insert("NEG_INFINITY", f64::NEG_INFINITY);
 
         m
-    };
-}
+    });

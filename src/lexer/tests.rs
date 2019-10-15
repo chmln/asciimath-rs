@@ -3,6 +3,7 @@ mod test {
     use crate::{
         ast::Scope,
         lexer::tokenize,
+        scope,
         tokens::{Operator, Token},
     };
     #[test]
