@@ -1,119 +1,97 @@
 use crate::{
     ast::{resolve_fn, resolve_var, Args, Node, Root, Scope},
+    constants::Args as FnArgs,
     error::Error,
-    tokens::{Operator, Token},
-    util::Result,
+    tokens::Token,
+    Result,
 };
-use std::f64::EPSILON;
 
 pub type NumericLiteral = f64;
+pub type EvaluationResult = Result<Value>;
 
-pub type EvaluationResult = Result<NumericLiteral>;
+#[derive(PartialEq, PartialOrd, Debug)]
+pub enum Value {
+    Num(f64),
+    Bool(bool),
+}
+
+impl std::fmt::Display for Value {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Value::Num(x) => {
+                if let Some(prec) = f.precision() {
+                    write!(f, "{1:.*}", prec, x)
+                } else {
+                    write!(f, "{}", x)
+                }
+            }
+            Value::Bool(b) => f.write_str(&b.to_string()),
+        }
+    }
+}
+
+impl From<f64> for Value {
+    fn from(num: f64) -> Self {
+        Value::Num(num)
+    }
+}
+
+impl From<bool> for Value {
+    fn from(b: bool) -> Self {
+        Value::Bool(b)
+    }
+}
 
 pub trait Evaluate {
     /// Evaluates the node/expression with a given variable scope.
-    fn eval_with(&self, scope: &Scope) -> EvaluationResult;
+    fn eval_with(&self, scope: &Scope) -> Result<Value>;
 
     /// Evaluates the node/expression without any variables.
     ///
     /// This is just a shortcut to evaluate expressions without variables.
-    fn eval(&self) -> EvaluationResult;
-}
-
-fn negate(n: f64) -> f64 {
-    if n == 0.0 {
-        1.0
-    }
-    else {
-        0.0
-    }
-}
-
-fn int(b: bool) -> f64 {
-    if b {
-        1.0
-    }
-    else {
-        0.0
-    }
-}
-
-pub fn eval_operator(
-    operator: &Operator,
-    args: &[NumericLiteral],
-) -> EvaluationResult {
-    let evaled_args = &mut args.iter();
-    let op_str = format!("{:?}", operator);
-
-    match operator {
-        Operator::Add => Ok(evaled_args.sum()),
-        Operator::Substract => {
-            Ok(evaled_args.nth(0).ok_or(Error::MissingOperands(op_str))?
-                - evaled_args.sum::<NumericLiteral>())
-        },
-        Operator::Multiply => Ok(evaled_args.product()),
-        Operator::Divide => {
-            Ok(evaled_args.nth(0).ok_or(Error::MissingOperands(op_str))?
-                / evaled_args.product::<NumericLiteral>())
-        },
-        Operator::Exponentiate => {
-            let base =
-                evaled_args.nth(0).ok_or(Error::MissingOperands(op_str))?;
-            Ok(evaled_args.fold(*base, |acc, v| acc.powf(*v)))
-        },
-        Operator::IsGreaterThan => Ok(int(args[0] > args[1])),
-        Operator::IsLessThan => Ok(int(args[0] < args[1])),
-        Operator::IsGreaterThanOrEqualTo => Ok(int(args[0] >= args[1])),
-        Operator::IsLessThanOrEqualTo => {
-            Ok(((args[0] <= args[1]) as i8).into())
-        },
-        Operator::IsEqualTo => Ok(int((args[0] - args[1]).abs() < EPSILON)),
-        Operator::IsNotEqualTo => Ok(int((args[0] - args[1]).abs() > EPSILON)),
-        Operator::Not => Ok(negate(args[0])),
+    fn eval(&self) -> Result<Value> {
+        self.eval_with(&Scope::new())
     }
 }
 
 fn eval_args(
     args: &Option<Args>,
     scope: &Scope,
-    fn_name: String,
-) -> Result<Vec<NumericLiteral>> {
-    if let Some(args) = args {
-        return args.iter().map(|n| n.eval_with(scope)).collect();
+    fn_name: &str,
+) -> Result<FnArgs> {
+    match args {
+        Some(args) => Ok(args
+            .into_iter()
+            .map(|n| n.eval_with(scope))
+            .collect::<Result<Vec<_>>>()?
+            .into()),
+        None => Err(Error::NotEnoughFunctionParams(fn_name.to_owned())),
     }
-    Err(Error::NotEnoughFunctionParams(fn_name))
 }
 
 impl Evaluate for Node {
     fn eval_with(&self, scope: &Scope) -> EvaluationResult {
         match self.token {
             Token::Operator(ref operator) => {
-                dbg!(&self.args);
                 let args = self
                     .args
                     .as_ref()
-                    .ok_or(Error::MissingOperands(format!("{:?}", operator)))?
+                    .ok_or(Error::MissingOperands(operator.clone()))?
                     .iter()
                     .map(|node| node.eval_with(scope))
-                    .collect::<Result<Vec<NumericLiteral>>>()?;
+                    .collect::<Result<Vec<Value>>>()?;
 
-                dbg!(&args);
-                let res = eval_operator(&operator, &args);
-                dbg!(res)
-            },
-            Token::Function(ref f) => {
-                let args = eval_args(&self.args, scope, f.clone())?;
-                resolve_fn(f, scope)?(&args)
-            },
-
-            Token::Number(num) => Ok(num),
+                operator.eval(&args)
+            }
+            Token::Function(ref fn_name) => {
+                let args = eval_args(&self.args, scope, fn_name)?;
+                let func = resolve_fn(fn_name, scope)?;
+                func(args)
+            }
+            Token::Number(x) => Ok(Value::Num(x)),
             Token::Variable(ref var) => resolve_var(&var, scope),
             _ => Err(Error::CannotEvaluateToken(format!("{:?}", self.token))),
         }
-    }
-
-    fn eval(&self) -> EvaluationResult {
-        self.eval_with(&Scope::new())
     }
 }
 

@@ -1,5 +1,6 @@
 use std::{cmp, fmt};
 
+#[derive(Clone, Copy)]
 pub enum Operator {
     Add,
     Substract,

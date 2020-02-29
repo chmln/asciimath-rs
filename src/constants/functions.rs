@@ -1,39 +1,103 @@
-use crate::ast::{EvaluationResult, NumericLiteral};
+use crate::ast::{EvaluationResult, NumericLiteral, Value};
 use once_cell::sync::Lazy;
+use smallvec::SmallVec;
 use std::{collections::HashMap, f64};
 
-pub type Args = Vec<NumericLiteral>;
-pub type Func = fn(&Args) -> EvaluationResult;
+#[derive(Default)]
+pub struct Args(SmallVec<[Value; 4]>);
+
+impl From<Vec<Value>> for Args {
+    fn from(args: Vec<Value>) -> Self {
+        Args(args.into())
+    }
+}
+
+impl Args {
+    pub fn get(&self, index: usize) -> Option<&Value> {
+        self.0.get(index)
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &Value> {
+        self.0.iter()
+    }
+
+    pub fn nums(
+        self,
+        n: usize,
+    ) -> Result<impl Iterator<Item = NumericLiteral>, Error> {
+        let nums: SmallVec<[NumericLiteral; 4]> = self
+            .0
+            .into_iter()
+            .filter_map(|x| match x {
+                Value::Num(x) => Some(x),
+                _ => None,
+            })
+            .collect();
+
+        if nums.len() < n {
+            Err(Error::NotEnoughParams)
+        } else {
+            Ok(nums.into_iter())
+        }
+    }
+}
+
+pub type Func = fn(Args) -> EvaluationResult;
 pub type CustomFn = Func;
+
+#[derive(thiserror::Error, Debug, PartialEq)]
+pub enum Error {
+    #[error("invalid argument given supplied: {}", .0)]
+    InvalidArgument(String),
+    #[error("expected more parameters for function")]
+    NotEnoughParams,
+}
 
 pub static FUNCTIONS: Lazy<HashMap<&'static str, Func>> = Lazy::new(|| {
     let mut m = HashMap::with_capacity(15);
 
-    let sin = |args: &Args| Ok(args[0].to_radians().sin());
-    let cos = |args: &Args| Ok(args[0].to_radians().cos());
-    let tan = |args: &Args| Ok(args[0].to_radians().tan());
+    let sin = |args: Args| {
+        Ok(args.nums(1)?.next().unwrap().to_radians().sin().into())
+    };
+    let cos = |args: Args| {
+        Ok(args.nums(1)?.next().unwrap().to_radians().cos().into())
+    };
+    let tan = |args: Args| {
+        Ok(args.nums(1)?.next().unwrap().to_radians().tan().into())
+    };
 
-    let max = |args: &Args| {
+    let max = |args: Args| {
         Ok(args
             .iter()
-            .fold(f64::NAN, |acc: NumericLiteral, x| acc.max(*x)))
+            .filter_map(|x| match x {
+                Value::Num(x) => Some(x),
+                _ => None,
+            })
+            .fold(f64::NAN, |acc: NumericLiteral, x| acc.max(*x))
+            .into())
     };
-    let min = |args: &Args| {
+    let min = |args: Args| {
         Ok(args
             .iter()
-            .fold(f64::NAN, |acc: NumericLiteral, x| acc.min(*x)))
+            .filter_map(|x| match x {
+                Value::Num(x) => Some(x),
+                _ => None,
+            })
+            .fold(f64::NAN, |acc: NumericLiteral, x| acc.min(*x))
+            .into())
     };
-    let abs = |args: &Args| Ok(args[0].abs());
+    let abs = |args: Args| Ok(args.nums(1)?.next().unwrap().abs().into());
+    let sqrt = |args: Args| Ok(args.nums(1)?.next().unwrap().sqrt().into());
+    let cbrt = |args: Args| Ok(args.nums(1)?.next().unwrap().cbrt().into());
+    let floor = |args: Args| Ok(args.nums(1)?.next().unwrap().floor().into());
+    let ln = |args: Args| Ok(args.nums(1)?.next().unwrap().ln().into());
+    let ceil = |args: Args| Ok(args.nums(1)?.next().unwrap().ceil().into());
 
-    let sqrt = |args: &Args| Ok(args[0].sqrt());
-    let cbrt = |args: &Args| Ok(args[0].cbrt());
-
-    let log = |args: &Args| Ok(args[1].log(args[0]));
-    let log_10 = |args: &Args| Ok(args[0].log(10.0));
-    let ln = |args: &Args| Ok(args[0].ln());
-
-    let floor = |args: &Args| Ok(args[0].floor());
-    let ceil = |args: &Args| Ok(args[0].ceil());
+    let log_10 = |args: Args| Ok(args.nums(1)?.next().unwrap().log10().into());
+    let log = |args: Args| {
+        let args = args.nums(2)?.collect::<Vec<_>>();
+        Ok(args.get(1).unwrap().log(*args.get(0).unwrap()).into())
+    };
 
     // comparison
     m.insert("min", min as Func);

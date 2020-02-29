@@ -6,7 +6,7 @@
 //! once, with a given a set of variables.
 //!
 //! ```
-//! use asciimath::{eval, scope};
+//! use asciimath::{Value, eval, scope};
 //!
 //! let expression = "(x + y * 4) ^ 3";
 //! let variables = scope! {
@@ -14,7 +14,7 @@
 //!    "y" => 12.25
 //! };
 //!
-//! assert_eq!(Ok(185193.0), eval(expression, &variables));
+//! assert_eq!(Ok(Value::Num(185193.0)), eval(expression, &variables));
 //! ```
 //!
 //!
@@ -27,7 +27,7 @@
 //! implicit multiplication and function calls.
 //!
 //! ```
-//! use asciimath::{compile, scope, Evaluate};
+//! use asciimath::{compile, scope, Value, Evaluate};
 //!
 //! let scope_one = scope! {
 //!    "x" => 8,
@@ -39,8 +39,8 @@
 //! };
 //! let expression = compile("(x + y * 4) ^ 3", &scope_one).unwrap();
 //!
-//! assert_eq!(Ok(185193.0), expression.eval_with(&scope_one));
-//! assert_eq!(Ok(27.0), expression.eval_with(&scope_two));
+//! assert_eq!(Ok(Value::Num(185193.0)), expression.eval_with(&scope_one));
+//! assert_eq!(Ok(Value::Num(27.0)), expression.eval_with(&scope_two));
 //! ```
 //!
 //! # Custom Functions
@@ -49,16 +49,16 @@
 //! as possible.
 //!
 //! ```
-//! use asciimath::{eval, scope, CustomFn};
+//! use asciimath::{eval, scope, Value, CustomFn};
 //!
-//! let my_sum: CustomFn = |args| Ok(args.iter().sum());
+//! let my_sum: CustomFn = |args| Ok(Value::Num(args.nums(1)?.sum()));
 //!
 //! let scope = scope! {
 //!   "x" => 1,
 //!   "my_sum" => my_sum,
 //! };
 //!
-//! assert_eq!(Ok(6.0), eval("my_sum(x, 2, 3)", &scope));
+//! assert_eq!(Ok(Value::Num(6.0)), eval("my_sum(x, 2, 3)", &scope));
 //! ```
 //!
 //! # Builtins
@@ -92,8 +92,10 @@ mod parser;
 mod tokens;
 mod util;
 
+pub(crate) use error::Result;
+
 pub use crate::{
-    ast::{Evaluate, Scope},
+    ast::{Evaluate, Scope, Value},
     constants::CustomFn,
     error::Error,
     parser::{compile, eval},

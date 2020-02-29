@@ -1,5 +1,7 @@
 mod functions;
-pub use self::functions::{Args, CustomFn, Func, FUNCTIONS};
+pub use self::functions::{
+    Args, CustomFn, Error as FunctionError, Func, FUNCTIONS,
+};
 
 use crate::ast::NumericLiteral;
 use once_cell::sync::Lazy;

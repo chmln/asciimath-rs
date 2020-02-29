@@ -8,12 +8,6 @@ pub struct Node {
     pub args: Option<Args>,
 }
 
-impl Node {
-    pub(crate) fn new(token: Token, args: Option<Args>) -> Self {
-        Self { token, args }
-    }
-}
-
 pub struct Root<'a> {
     pub node: Node,
     pub scope: &'a Scope,

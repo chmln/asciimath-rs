@@ -3,8 +3,8 @@ use crate::{
     error::Error,
     lexer::tokenize,
     tokens::{Operator, Token, TokenList},
+    Result,
 };
-use std::{collections::VecDeque, string::ToString};
 
 type NodeList = Vec<Node>;
 
@@ -12,11 +12,11 @@ pub fn eval(expr: &str, scope: &Scope) -> EvaluationResult {
     parse_tokens(tokenize(expr, scope)?, scope)?.eval()
 }
 
-pub fn compile<'a>(expr: &'a str, scope: &'a Scope) -> Result<Root<'a>, Error> {
+pub fn compile<'a>(expr: &'a str, scope: &'a Scope) -> Result<Root<'a>> {
     parse_tokens(tokenize(expr, scope)?, scope)
 }
 
-fn encounter_func(f: String, operands: &mut NodeList) -> Result<(), Error> {
+fn encounter_func(f: String, operands: &mut NodeList) -> Result<()> {
     let mut args = Args::with_capacity(2);
 
     // ASSUMPTION: at least one argument per function
@@ -30,8 +30,7 @@ fn encounter_func(f: String, operands: &mut NodeList) -> Result<(), Error> {
         if last.token != Token::Comma {
             operands.push(last);
             break;
-        }
-        else {
+        } else {
             args.push_front(
                 operands
                     .pop()
@@ -40,7 +39,10 @@ fn encounter_func(f: String, operands: &mut NodeList) -> Result<(), Error> {
         }
     }
 
-    operands.push(Node::new(Token::Function(f), Some(args)));
+    operands.push(Node {
+        token: Token::Function(f),
+        args: Some(args),
+    });
     Ok(())
 }
 
@@ -51,69 +53,61 @@ fn right_paren(
     while let Some(top) = operators.pop() {
         match top {
             Token::LeftParenthesis => match operators.last() {
-                Some(Token::Function(_)) => {},
+                Some(Token::Function(_)) => {}
                 _ => break,
             },
             Token::Function(f) => encounter_func(f, operands)?,
             Token::Operator(op) => add_operator(op, operands)?,
-            _ => {},
+            _ => {}
         }
     }
     Ok(())
 }
 
-fn add_operator(
-    operator: Operator,
-    operands: &mut NodeList,
-) -> Result<(), Error> {
-    let num_operands = operator.num_operands();
+fn add_operator(operator: Operator, operands: &mut NodeList) -> Result<()> {
+    let (n_operands, required) = (operands.len(), operator.num_operands());
+    if n_operands < required {
+        return Err(Error::MissingOperands(operator));
+    };
 
-    let mut args: VecDeque<Node> =
-        VecDeque::with_capacity(num_operands as usize);
+    let args = operands.split_off(operands.len() - required);
+    operands.push(Node {
+        token: Token::Operator(operator),
+        args: Some(args.into()),
+    });
 
-    for _ in 0..num_operands {
-        args.push_front(
-            operands
-                .pop()
-                .ok_or(Error::MissingOperands(operator.to_string()))?,
-        );
-    }
-    operands.push(Node::new(Token::Operator(operator), Some(args)));
     Ok(())
 }
 
 fn encounter_operator(
-    cur_operator: Operator,
+    cur_op: Operator,
     operators: &mut TokenList,
     operands: &mut NodeList,
-) -> Result<(), Error> {
+) -> Result<()> {
     while let Some(top) = operators.pop() {
         match top {
-            Token::Operator(top_operator) => {
-                if top_operator > cur_operator
-                    || (top_operator == cur_operator
-                        && !cur_operator.is_right_associative())
-                {
-                    add_operator(top_operator, operands)?
-                }
-                else {
-                    operators.push(Token::Operator(top_operator));
+            Token::Operator(op) => {
+                let is_right_assoc = cur_op.is_right_associative();
+                if op > cur_op || (op == cur_op && !is_right_assoc) {
+                    add_operator(op, operands)?
+                } else {
+                    operators.push(Token::Operator(op));
                     break;
                 }
-            },
+            }
             Token::Function(f) => encounter_func(f, operands)?,
             _ => {
                 operators.push(top);
                 break;
-            },
+            }
         }
     }
 
-    operators.push(Token::Operator(cur_operator));
+    operators.push(Token::Operator(cur_op));
     Ok(())
 }
 
-fn parse_tokens(tokens: TokenList, scope: &Scope) -> Result<Root, Error> {
+fn parse_tokens(tokens: TokenList, scope: &Scope) -> Result<Root> {
     let mut operators: TokenList = Vec::new();
     let mut operands: NodeList = Vec::new();
 
@@ -129,13 +123,13 @@ fn parse_tokens(tokens: TokenList, scope: &Scope) -> Result<Root, Error> {
             }),
             Token::RightParenthesis => {
                 right_paren(&mut operators, &mut operands)?
-            },
+            }
             Token::LeftParenthesis => operators.push(token),
             Token::Operator(op1) => {
                 encounter_operator(op1, &mut operators, &mut operands)?;
-            },
+            }
             Token::Function(f) => operators.push(Token::Function(f)),
-            Token::Comma => operands.push(Node::new(token, None)),
+            Token::Comma => operands.push(Node { token, args: None }),
         };
     }
 
@@ -143,9 +137,8 @@ fn parse_tokens(tokens: TokenList, scope: &Scope) -> Result<Root, Error> {
         add_operator(operator, &mut operands)?
     }
 
-    // TODO: revisit this when the final output can also be a string
-    operands.pop().map_or_else(
-        || Err(Error::EmptyExpression),
-        |node| Ok(Root { node, scope }),
-    )
+    match operands.pop() {
+        Some(node) => Ok(Root { node, scope }),
+        None => Err(Error::EmptyExpression),
+    }
 }

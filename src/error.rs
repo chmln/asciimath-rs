@@ -1,64 +1,34 @@
-use std::fmt;
-
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, thiserror::Error)]
 pub enum Error {
-    MissingOperands(String),         // operator
+    #[error("Expected more operands for operator \"{0}\"")]
+    MissingOperands(crate::tokens::Operator), // operator
+    #[error("Expected more parameters for function \"{0}\"")]
     NotEnoughFunctionParams(String), // fn name
-    FunctionSyntaxError(String),     // fn name
-    UnknownFunction(String),         // fn name
-    UnknownVariable(String),         // var name
-    CannotEvaluateToken(String),     // invalid token on stack
+    #[error(
+        "Syntax error in function \"{0}()\". Usually this occurs because of \
+         missing or extra commas."
+    )]
+    FunctionSyntaxError(String), // fn name
+    #[error(
+        "Function\"{0}()\" does not exist. If it is a custom function, make \
+         sure you are passing it through the Scope."
+    )]
+    UnknownFunction(String), // fn name
+    #[error(
+        "Variable \"{0}\" is not defined. Make sure you are passing it \
+         through the Scope."
+    )]
+    UnknownVariable(String), // var name
+    #[error("Internal error. Please open an issue at https://github.com/chmln/asciimath-rs/issues")]
+    CannotEvaluateToken(String), // invalid token on stack
+    #[error("Invalid token: \"{0}\"")]
     InvalidToken(String),
+    #[error("The expression is empty and there is nothing to evaluate")]
     EmptyExpression,
+    #[error("Invalid operands given for operator:\"{0}\"")]
+    InvalidOperands(crate::tokens::Operator),
+    #[error(transparent)]
+    Function(#[from] crate::constants::FunctionError),
 }
 
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Error::MissingOperands(operator) => write!(
-                f,
-                "Expected more operands for operator \"{}\"",
-                operator
-            ),
-            Error::NotEnoughFunctionParams(fn_name) => write!(
-                f,
-                "Expected more parameters for function \"{}\"",
-                fn_name
-            ),
-            Error::FunctionSyntaxError(fn_name) => write!(
-                f,
-                "Syntax error in function \"{}()\". Usually this occurs \
-                 because of missing or extra commas.",
-                fn_name
-            ),
-            Error::UnknownFunction(fn_name) => write!(
-                f,
-                "Function\"{}()\" does not exist. If it is a custom function, \
-                 make sure you are passing it through the Scope.",
-                fn_name
-            ),
-            Error::UnknownVariable(var_name) => write!(
-                f,
-                "Variable \"{}\" is not defined. Make sure you are passing it \
-                 through the Scope.",
-                var_name
-            ),
-            Error::CannotEvaluateToken(token) => write!(
-                f,
-                "Token \"{}\" does not belong on the stack. Please open an \
-                 issue with your expression at \
-                 https://github.com/chmln/asciimath-rs/issues",
-                token
-            ),
-            Error::InvalidToken(token) => {
-                write!(f, "Invalid token: \"{}\"", token)
-            },
-            Error::EmptyExpression => write!(
-                f,
-                "The expression is empty and there is nothing to evaluate"
-            ),
-        }
-    }
-}
-
-impl std::error::Error for Error {}
+pub type Result<T, E = Error> = std::result::Result<T, E>;

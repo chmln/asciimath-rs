@@ -1,7 +1,4 @@
-use crate::error::Error;
 use std::{iter::Peekable, str};
-
-pub type Result<T> = std::result::Result<T, Error>;
 
 pub fn consume_while<F>(it: &mut Peekable<str::Chars>, x: F) -> String
 where

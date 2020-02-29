@@ -1,5 +1,5 @@
 use crate::{
-    ast::{NumericLiteral, Scope, Variable},
+    ast::{Scope, Value, Variable},
     constants::{Func, CONSTANTS, FUNCTIONS},
     error::Error,
 };
@@ -14,12 +14,13 @@ pub fn resolve_fn<'a>(name: &str, scope: &'a Scope) -> Result<&'a Func, Error> {
     )
 }
 
-pub fn resolve_var(name: &str, scope: &Scope) -> Result<NumericLiteral, Error> {
+pub fn resolve_var(name: &str, scope: &Scope) -> Result<Value, Error> {
     CONSTANTS.get(name).map_or_else(
         || match scope.get_var(name) {
-            Some(Variable::Number(n)) => Ok(*n),
+            Some(Variable::Number(x)) => Ok(Value::Num(*x)),
+            Some(Variable::Boolean(x)) => Ok(Value::Bool(*x)),
             _ => Err(Error::UnknownVariable(name.to_string())),
         },
-        |f| Ok(*f),
+        |f| Ok(Value::Num(*f)),
     )
 }

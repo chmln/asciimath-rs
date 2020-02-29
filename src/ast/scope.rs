@@ -3,6 +3,7 @@ use std::{collections::HashMap, convert::Into};
 
 pub enum Variable {
     Number(NumericLiteral),
+    Boolean(bool),
     Function(CustomFn),
 }
 
@@ -25,6 +26,12 @@ impl From<CustomFn> for Variable {
     }
 }
 
+impl From<bool> for Variable {
+    fn from(a: bool) -> Self {
+        Self::Boolean(a)
+    }
+}
+
 #[derive(Default)]
 pub struct Scope {
     variables: HashMap<String, Variable>,
@@ -32,9 +39,7 @@ pub struct Scope {
 
 impl Scope {
     pub fn new() -> Self {
-        Scope {
-            variables: HashMap::new(),
-        }
+        Self::default()
     }
 
     pub fn with_capacity(cap: usize) -> Self {
